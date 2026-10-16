@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Afroman Web — engine smoke test</title>
+<style>body{margin:0;background:#10141c;color:#e4e8f0;font:16px system-ui;text-align:center}canvas{display:block;margin:20px auto;max-width:100%;height:auto;image-rendering:pixelated}pre{white-space:pre-wrap}</style>
+<h1>Afroman Web</h1><p id="status">Loading the C++ engine…</p>
+<canvas id="canvas" width="1050" height="640" tabindex="0" oncontextmenu="event.preventDefault()"></canvas>
+<pre id="log"></pre>
+<script>var Module={canvas:document.getElementById('canvas'),print:function(s){console.log(s);document.getElementById('log').textContent+=s+'\n';if(s.includes('AFROMAN_M1'))document.getElementById('status').textContent='Cocos2d-x 3.2 running in WebAssembly';if(s.includes('60 frames'))document.getElementById('status').textContent='Verified: 60 Cocos frames rendered';},printErr:function(s){console.error(s);document.getElementById("log").textContent+="ERROR: "+s+"\n";},onAbort:function(s){document.getElementById('status').textContent='Startup failed: '+s;}};</script>
+{{{ SCRIPT }}}
+</html>

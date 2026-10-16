@@ -1,0 +1,106 @@
+diff --git a/cocos/base/CCPlatformConfig.h b/cocos/base/CCPlatformConfig.h
+index 12c1735..910d4f9 100644
+--- a/cocos/base/CCPlatformConfig.h
++++ b/cocos/base/CCPlatformConfig.h
+@@ -109,7 +109,7 @@ Config of cocos2d-x project, per target platform.
+ #endif
+ 
+ // Emscripten
+-#if defined(EMSCRIPTEN)
++#if defined(__EMSCRIPTEN__)
+     #undef  CC_TARGET_PLATFORM
+     #define CC_TARGET_PLATFORM     CC_PLATFORM_EMSCRIPTEN
+ #endif
+diff --git a/cocos/base/CCRefPtr.h b/cocos/base/CCRefPtr.h
+index 36325ee..7ccfa9b 100644
+--- a/cocos/base/CCRefPtr.h
++++ b/cocos/base/CCRefPtr.h
+@@ -211,7 +211,7 @@ public:
+     
+     inline bool operator > (typename std::remove_const<T>::type * other) const { return _ptr > other; }
+     
+-    inline bool operator > (const std::nullptr_t other) const { return _ptr > other; }
++    inline bool operator > (const std::nullptr_t other) const { return _ptr > static_cast<T*>(nullptr); }
+     
+     
+     inline bool operator < (const RefPtr<T> & other) const { return _ptr < other._ptr; }
+@@ -220,7 +220,7 @@ public:
+     
+     inline bool operator < (typename std::remove_const<T>::type * other) const { return _ptr < other; }
+     
+-    inline bool operator < (const std::nullptr_t other) const { return _ptr < other; }
++    inline bool operator < (const std::nullptr_t other) const { return _ptr < static_cast<T*>(nullptr); }
+     
+         
+     inline bool operator >= (const RefPtr<T> & other) const { return _ptr >= other._ptr; }
+@@ -229,7 +229,7 @@ public:
+     
+     inline bool operator >= (typename std::remove_const<T>::type * other) const { return _ptr >= other; }
+     
+-    inline bool operator >= (const std::nullptr_t other) const { return _ptr >= other; }
++    inline bool operator >= (const std::nullptr_t other) const { return _ptr >= static_cast<T*>(nullptr); }
+     
+         
+     inline bool operator <= (const RefPtr<T> & other) const { return _ptr <= other._ptr; }
+@@ -238,7 +238,7 @@ public:
+     
+     inline bool operator <= (typename std::remove_const<T>::type * other) const { return _ptr <= other; }
+     
+-    inline bool operator <= (const std::nullptr_t other) const { return _ptr <= other; }
++    inline bool operator <= (const std::nullptr_t other) const { return _ptr <= static_cast<T*>(nullptr); }
+     
+         
+     inline operator bool() const { return _ptr != nullptr; }
+diff --git a/cocos/cocos2d.h b/cocos/cocos2d.h
+index db8e89f..b1daa95 100644
+--- a/cocos/cocos2d.h
++++ b/cocos/cocos2d.h
+@@ -171,6 +171,11 @@ THE SOFTWARE.
+ #include "base/CCPlatformConfig.h"
+ #include "base/CCPlatformMacros.h"
+ 
++#if CC_TARGET_PLATFORM == CC_PLATFORM_EMSCRIPTEN
++#include "CCApplication.h"
++#include "CCGLView.h"
++#endif
++
+ #if (CC_TARGET_PLATFORM == CC_PLATFORM_IOS)
+     #include "platform/ios/CCApplication.h"
+     #include "platform/ios/CCGLView.h"
+diff --git a/cocos/renderer/CCRenderer.cpp b/cocos/renderer/CCRenderer.cpp
+index b7c9b47..226b29e 100644
+--- a/cocos/renderer/CCRenderer.cpp
++++ b/cocos/renderer/CCRenderer.cpp
+@@ -439,9 +439,13 @@ void Renderer::drawBatchedQuads()
+ 
+         // option 3: orphaning + glMapBuffer
+         glBufferData(GL_ARRAY_BUFFER, sizeof(_quads[0]) * (_numQuads), nullptr, GL_DYNAMIC_DRAW);
++#if defined(__EMSCRIPTEN__)
++        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(_quads[0]) * _numQuads, _quads);
++#else
+         void *buf = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+         memcpy(buf, _quads, sizeof(_quads[0])* (_numQuads));
+         glUnmapBuffer(GL_ARRAY_BUFFER);
++#endif
+ 
+         glBindBuffer(GL_ARRAY_BUFFER, 0);
+ 
+diff --git a/cocos/renderer/CCTextureAtlas.cpp b/cocos/renderer/CCTextureAtlas.cpp
+index d6b1a75..4e26f3b 100644
+--- a/cocos/renderer/CCTextureAtlas.cpp
++++ b/cocos/renderer/CCTextureAtlas.cpp
+@@ -626,9 +626,13 @@ void TextureAtlas::drawNumberOfQuads(ssize_t numberOfQuads, ssize_t start)
+ 
+             // option 3: orphaning + glMapBuffer
+             glBufferData(GL_ARRAY_BUFFER, sizeof(_quads[0]) * (numberOfQuads-start), nullptr, GL_DYNAMIC_DRAW);
+-            void *buf = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
++    #if defined(__EMSCRIPTEN__)
++        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(_quads[0]) * (numberOfQuads-start), _quads);
++#else
++        void *buf = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+             memcpy(buf, _quads, sizeof(_quads[0])* (numberOfQuads-start));
+             glUnmapBuffer(GL_ARRAY_BUFFER);
++#endif
+             
+             glBindBuffer(GL_ARRAY_BUFFER, 0);
+ 

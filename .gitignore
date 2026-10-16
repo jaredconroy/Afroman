@@ -47,3 +47,9 @@ Temporary Items
 .preservation/
 **/xcuserdata/
 *.xcuserstate
+
+# Isolated web tools, upstream sources, and generated builds
+.tools/
+vendor/
+build-web/
+dist/
