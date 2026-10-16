@@ -1,0 +1,35 @@
+ M build/cocos2d_libs.xcodeproj/project.pbxproj
+ M "build/cocos2d_libs.xcodeproj/xcshareddata/xcschemes/box2d iOS.xcscheme"
+ M "build/cocos2d_libs.xcodeproj/xcshareddata/xcschemes/cocos2dx Mac.xcscheme"
+ M cocos/audio/mac/CDAudioManager.m
+ M cocos/audio/mac/CDXMacOSXSupport.h
+ M cocos/audio/mac/CDXMacOSXSupport.mm
+ M cocos/base/CCPlatformMacros.h
+ M cocos/base/ZipUtils.h
+ D cocos/platform/ios/CCApplication.h
+ D cocos/platform/ios/CCApplication.mm
+ D cocos/platform/ios/CCCommon.mm
+ D cocos/platform/ios/CCDevice.mm
+ D cocos/platform/ios/CCDirectorCaller.h
+ D cocos/platform/ios/CCDirectorCaller.mm
+ D cocos/platform/ios/CCEAGLView.h
+ D cocos/platform/ios/CCEAGLView.mm
+ D cocos/platform/ios/CCES2Renderer.h
+ D cocos/platform/ios/CCES2Renderer.m
+ D cocos/platform/ios/CCESRenderer.h
+ D cocos/platform/ios/CCGL.h
+ D cocos/platform/ios/CCGLView.h
+ D cocos/platform/ios/CCGLView.mm
+ D cocos/platform/ios/CCImage.mm
+ D cocos/platform/ios/CCPlatformDefine.h
+ D cocos/platform/ios/CCStdC.h
+ D cocos/platform/ios/OpenGL_Internal.h
+ M cocos/platform/mac/CCDevice.mm
+ M download-deps.py
+ M templates/lua-template-runtime/runtime/config.json
+?? cocos/audio/mac/CDAudioManager.m.pre-modern-mac
+?? cocos/audio/mac/CDXMacOSXSupport.h.pre-modern-mac
+?? cocos/audio/mac/CDXMacOSXSupport.mm.pre-modern-mac
+?? cocos/platform/ios.disabled/
+?? cocos2d-x-3.2
+?? download-deps.py.original

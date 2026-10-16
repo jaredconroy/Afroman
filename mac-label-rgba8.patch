@@ -1,0 +1,75 @@
+--- cocos/platform/mac/CCDevice.mm
++++ cocos/platform/mac/CCDevice.mm
+@@ -166,7 +166,6 @@
+         
+ 		NSInteger POTWide = dimensions.width;
+ 		NSInteger POTHigh = MAX(dimensions.height, realDimensions.height);
+-		unsigned char*			data;
+ 		//Alignment
+         
+ 		CGFloat xPadding = 0;
+@@ -187,34 +186,38 @@
+ 		
+ 		NSRect textRect = NSMakeRect(xPadding, POTHigh - dimensions.height + yPadding, realDimensions.width, realDimensions.height);
+ 		
+-		NSImage *image = [[NSImage alloc] initWithSize:NSMakeSize(POTWide, POTHigh)];
++		// Focus capture can return RGBA16Float on modern macOS. Textures require
++		// tightly packed, premultiplied RGBA8 (alpha last), regardless of display.
++		NSBitmapImageRep *bitmap = [[NSBitmapImageRep alloc]
++            initWithBitmapDataPlanes:NULL
++            pixelsWide:POTWide pixelsHigh:POTHigh
++            bitsPerSample:8 samplesPerPixel:4 hasAlpha:YES isPlanar:NO
++            colorSpaceName:NSDeviceRGBColorSpace bitmapFormat:0
++            bytesPerRow:POTWide * 4 bitsPerPixel:32];
++        CC_BREAK_IF(!bitmap);
++        NSGraphicsContext *context = [NSGraphicsContext graphicsContextWithBitmapImageRep:bitmap];
++        if (!context) {
++            [bitmap release];
++            break;
++        }
++        NSUInteger textureSize = POTWide * POTHigh * 4;
++        memset([bitmap bitmapData], 0, textureSize);
++        [NSGraphicsContext saveGraphicsState];
++        [NSGraphicsContext setCurrentContext:context];
+ 
+-		[image lockFocus];
+-
+-		// Disable antialiasing/font smoothing in the actual image context
+-		NSGraphicsContext *context = [NSGraphicsContext currentContext];
++		// Keep pixel-font edges crisp in the actual bitmap context.
+ 		[context setShouldAntialias:NO];
+ 
+ 		CGContextRef cgContext = [context CGContext];
+ 		CGContextSetShouldAntialias(cgContext, false);
+ 		CGContextSetShouldSmoothFonts(cgContext, false);
+-        
+-        // patch for mac retina display and lableTTF
+-        [[NSAffineTransform transform] set];
+-		
+-		//[stringWithAttributes drawAtPoint:NSMakePoint(xPadding, offsetY)]; // draw at offset position
+ 		[stringWithAttributes drawInRect:textRect];
+-		//[stringWithAttributes drawInRect:textRect withAttributes:tokenAttributesDict];
+-		NSBitmapImageRep *bitmap = [[NSBitmapImageRep alloc] initWithFocusedViewRect:NSMakeRect (0.0f, 0.0f, POTWide, POTHigh)];
+-		[image unlockFocus];
++        [context flushGraphics];
++        [NSGraphicsContext restoreGraphicsState];
+ 		
+-		data = (unsigned char*) [bitmap bitmapData];  //Use the same buffer to improve the performance.
+-		
+-		NSUInteger textureSize = POTWide*POTHigh*4;
+-		
+ 		unsigned char* dataNew = (unsigned char*)malloc(sizeof(unsigned char) * textureSize);
+ 		if (dataNew) {
+-			memcpy(dataNew, data, textureSize);
++			memcpy(dataNew, [bitmap bitmapData], textureSize);
+ 			// output params
+ 			info->width = static_cast<int>(POTWide);
+ 			info->height = static_cast<int>(POTHigh);
+@@ -224,7 +227,6 @@
+ 			ret = true;
+ 		}
+ 		[bitmap release];
+-		[image release];
+ 	} while (0);
+     return ret;
+ }

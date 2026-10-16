@@ -1,5 +1,6 @@
 #include "AppDelegate.h"
 #include "StartScreen.h"
+#include "platform/desktop/CCGLView.h"
 
 USING_NS_CC;
 
@@ -15,7 +16,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
 	auto director = Director::getInstance();
 	auto glview = director->getOpenGLView();
 	if (!glview) {
-		glview = GLViewImpl::create("Afroman");
+        glview = GLView::create("Afroman");
 		glview->setFrameSize(1050, 640);
 		director->setOpenGLView(glview);
 	}

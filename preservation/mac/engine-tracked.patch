@@ -1,0 +1,512 @@
+diff --git a/build/cocos2d_libs.xcodeproj/project.pbxproj b/build/cocos2d_libs.xcodeproj/project.pbxproj
+index 08b4c96..9b6f6bd 100644
+--- a/build/cocos2d_libs.xcodeproj/project.pbxproj
++++ b/build/cocos2d_libs.xcodeproj/project.pbxproj
+@@ -6195,6 +6195,7 @@
+ 			developmentRegion = English;
+ 			hasScannedForEncodings = 0;
+ 			knownRegions = (
++				English,
+ 				en,
+ 			);
+ 			mainGroup = 1551A334158F2AB200E66CFE;
+@@ -7289,6 +7290,7 @@
+ 					"\"$(SRCROOT)/../external/freetype2/prebuilt/mac\"",
+ 					"\"$(SRCROOT)/../external/websockets/prebuilt/mac\"",
+ 				);
++				MACOSX_DEPLOYMENT_TARGET = 12.0;
+ 				USER_HEADER_SEARCH_PATHS = "$(inherited) $(SRCROOT)/../external/png/include/mac $(SRCROOT)/../external/tiff/include/mac $(SRCROOT)/../external/webp/include/mac $(SRCROOT)/../external/jpeg/include/mac $(SRCROOT)/../external/freetype2/include/mac $(SRCROOT)/../external/websockets/include/mac $(SRCROOT)/../external/glfw3/include/mac";
+ 			};
+ 			name = Debug;
+@@ -7317,6 +7319,7 @@
+ 					"\"$(SRCROOT)/../external/freetype2/prebuilt/mac\"",
+ 					"\"$(SRCROOT)/../external/websockets/prebuilt/mac\"",
+ 				);
++				MACOSX_DEPLOYMENT_TARGET = 12.0;
+ 				USER_HEADER_SEARCH_PATHS = "$(inherited) $(SRCROOT)/../external/png/include/mac $(SRCROOT)/../external/tiff/include/mac $(SRCROOT)/../external/webp/include/mac $(SRCROOT)/../external/jpeg/include/mac $(SRCROOT)/../external/freetype2/include/mac $(SRCROOT)/../external/websockets/include/mac $(SRCROOT)/../external/glfw3/include/mac";
+ 			};
+ 			name = Release;
+@@ -7326,6 +7329,7 @@
+ 			buildSettings = {
+ 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
+ 				HEADER_SEARCH_PATHS = "";
++				MACOSX_DEPLOYMENT_TARGET = 12.0;
+ 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../external/chipmunk/include/chipmunk/";
+ 			};
+ 			name = Debug;
+@@ -7336,6 +7340,7 @@
+ 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+ 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
+ 				HEADER_SEARCH_PATHS = "";
++				MACOSX_DEPLOYMENT_TARGET = 12.0;
+ 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../external/chipmunk/include/chipmunk/";
+ 			};
+ 			name = Release;
+@@ -7350,6 +7355,7 @@
+ 				GCC_WARN_UNUSED_VALUE = NO;
+ 				GCC_WARN_UNUSED_VARIABLE = NO;
+ 				HEADER_SEARCH_PATHS = "$(SRCROOT)/../external/";
++				MACOSX_DEPLOYMENT_TARGET = 12.0;
+ 				USER_HEADER_SEARCH_PATHS = "";
+ 			};
+ 			name = Debug;
+@@ -7365,6 +7371,7 @@
+ 				GCC_WARN_UNUSED_VALUE = NO;
+ 				GCC_WARN_UNUSED_VARIABLE = NO;
+ 				HEADER_SEARCH_PATHS = "$(SRCROOT)/../external/";
++				MACOSX_DEPLOYMENT_TARGET = 12.0;
+ 				USER_HEADER_SEARCH_PATHS = "";
+ 			};
+ 			name = Release;
+@@ -7382,6 +7389,7 @@
+ 					"$(inherited)",
+ 					"/Applications/Xcode\\ 2.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include",
+ 				);
++				MACOSX_DEPLOYMENT_TARGET = 12.0;
+ 			};
+ 			name = Debug;
+ 		};
+@@ -7392,6 +7400,7 @@
+ 					"$(inherited)",
+ 					"/Applications/Xcode\\ 2.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include",
+ 				);
++				MACOSX_DEPLOYMENT_TARGET = 12.0;
+ 			};
+ 			name = Release;
+ 		};
+@@ -7402,6 +7411,7 @@
+ 				GCC_PREPROCESSOR_DEFINITIONS = CC_TARGET_OS_MAC;
+ 				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
+ 				HEADER_SEARCH_PATHS = "";
++				MACOSX_DEPLOYMENT_TARGET = 12.0;
+ 				USER_HEADER_SEARCH_PATHS = "$(inherited) $(SRCROOT)/../cocos/platform/mac";
+ 			};
+ 			name = Debug;
+@@ -7414,6 +7424,7 @@
+ 				GCC_PREPROCESSOR_DEFINITIONS = CC_TARGET_OS_MAC;
+ 				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
+ 				HEADER_SEARCH_PATHS = "";
++				MACOSX_DEPLOYMENT_TARGET = 12.0;
+ 				USER_HEADER_SEARCH_PATHS = "$(inherited) $(SRCROOT)/../cocos/platform/mac";
+ 			};
+ 			name = Release;
+@@ -7430,6 +7441,7 @@
+ 				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
+ 				HEADER_SEARCH_PATHS = "";
+ 				LIBRARY_SEARCH_PATHS = "$(inherited)";
++				MACOSX_DEPLOYMENT_TARGET = 12.0;
+ 				USER_HEADER_SEARCH_PATHS = "$(inherited) $(SRCROOT)/../cocos/platform/mac $(SRCROOT)/../cocos/platform/desktop $(SRCROOT)/../external/glfw3/include/mac";
+ 			};
+ 			name = Debug;
+@@ -7447,6 +7459,7 @@
+ 				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
+ 				HEADER_SEARCH_PATHS = "";
+ 				LIBRARY_SEARCH_PATHS = "$(inherited)";
++				MACOSX_DEPLOYMENT_TARGET = 12.0;
+ 				USER_HEADER_SEARCH_PATHS = "$(inherited) $(SRCROOT)/../cocos/platform/mac $(SRCROOT)/../cocos/platform/desktop $(SRCROOT)/../external/glfw3/include/mac";
+ 			};
+ 			name = Release;
+diff --git a/build/cocos2d_libs.xcodeproj/xcshareddata/xcschemes/box2d iOS.xcscheme b/build/cocos2d_libs.xcodeproj/xcshareddata/xcschemes/box2d iOS.xcscheme
+index 4955632..fa5a024 100644
+--- a/build/cocos2d_libs.xcodeproj/xcshareddata/xcschemes/box2d iOS.xcscheme	
++++ b/build/cocos2d_libs.xcodeproj/xcshareddata/xcschemes/box2d iOS.xcscheme	
+@@ -17,36 +17,35 @@
+                BlueprintIdentifier = "A07A4F3C1783876B0073F6A7"
+                BuildableName = "libbox2d iOS.a"
+                BlueprintName = "box2d iOS"
+-               ReferencedContainer = "container:cocos2d_libs.xcodeproj">
++               ReferencedContainer = "container:../../Afroman/cocos2d/build/cocos2d_libs.xcodeproj">
+             </BuildableReference>
+          </BuildActionEntry>
+       </BuildActionEntries>
+    </BuildAction>
+    <TestAction
++      buildConfiguration = "Debug"
+       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+-      shouldUseLaunchSchemeArgsEnv = "YES"
+-      buildConfiguration = "Debug">
++      shouldUseLaunchSchemeArgsEnv = "YES">
+       <Testables>
+       </Testables>
+    </TestAction>
+    <LaunchAction
++      buildConfiguration = "Debug"
+       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+       launchStyle = "0"
+       useCustomWorkingDirectory = "NO"
+-      buildConfiguration = "Debug"
+       ignoresPersistentStateOnLaunch = "NO"
+       debugDocumentVersioning = "YES"
++      debugServiceExtension = "internal"
+       allowLocationSimulation = "YES">
+-      <AdditionalOptions>
+-      </AdditionalOptions>
+    </LaunchAction>
+    <ProfileAction
++      buildConfiguration = "Release"
+       shouldUseLaunchSchemeArgsEnv = "YES"
+       savedToolIdentifier = ""
+       useCustomWorkingDirectory = "NO"
+-      buildConfiguration = "Release"
+       debugDocumentVersioning = "YES">
+    </ProfileAction>
+    <AnalyzeAction
+diff --git a/build/cocos2d_libs.xcodeproj/xcshareddata/xcschemes/cocos2dx Mac.xcscheme b/build/cocos2d_libs.xcodeproj/xcshareddata/xcschemes/cocos2dx Mac.xcscheme
+index 4c17920..6b8d5e3 100644
+--- a/build/cocos2d_libs.xcodeproj/xcshareddata/xcschemes/cocos2dx Mac.xcscheme	
++++ b/build/cocos2d_libs.xcodeproj/xcshareddata/xcschemes/cocos2dx Mac.xcscheme	
+@@ -17,36 +17,35 @@
+                BlueprintIdentifier = "1551A33E158F2AB200E66CFE"
+                BuildableName = "libcocos2dx Mac.a"
+                BlueprintName = "cocos2dx Mac"
+-               ReferencedContainer = "container:cocos2d_libs.xcodeproj">
++               ReferencedContainer = "container:../../Afroman/cocos2d/build/cocos2d_libs.xcodeproj">
+             </BuildableReference>
+          </BuildActionEntry>
+       </BuildActionEntries>
+    </BuildAction>
+    <TestAction
++      buildConfiguration = "Debug"
+       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+-      shouldUseLaunchSchemeArgsEnv = "YES"
+-      buildConfiguration = "Debug">
++      shouldUseLaunchSchemeArgsEnv = "YES">
+       <Testables>
+       </Testables>
+    </TestAction>
+    <LaunchAction
++      buildConfiguration = "Debug"
+       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+       launchStyle = "0"
+       useCustomWorkingDirectory = "NO"
+-      buildConfiguration = "Debug"
+       ignoresPersistentStateOnLaunch = "NO"
+       debugDocumentVersioning = "YES"
++      debugServiceExtension = "internal"
+       allowLocationSimulation = "YES">
+-      <AdditionalOptions>
+-      </AdditionalOptions>
+    </LaunchAction>
+    <ProfileAction
++      buildConfiguration = "Release"
+       shouldUseLaunchSchemeArgsEnv = "YES"
+       savedToolIdentifier = ""
+       useCustomWorkingDirectory = "NO"
+-      buildConfiguration = "Release"
+       debugDocumentVersioning = "YES">
+    </ProfileAction>
+    <AnalyzeAction
+diff --git a/cocos/audio/mac/CDAudioManager.m b/cocos/audio/mac/CDAudioManager.m
+index b5365af..d9c43a3 100644
+--- a/cocos/audio/mac/CDAudioManager.m
++++ b/cocos/audio/mac/CDAudioManager.m
+@@ -324,10 +324,7 @@ + (void) configure: (tAudioManagerMode) mode {
+ }    
+ 
+ -(BOOL) isOtherAudioPlaying {
+-    UInt32 isPlaying = 0;
+-    UInt32 varSize = sizeof(isPlaying);
+-    AudioSessionGetProperty (kAudioSessionProperty_OtherAudioIsPlaying, &varSize, &isPlaying);
+-    return (isPlaying != 0);
++    return NO;
+ }
+ 
+ -(void) setMode:(tAudioManagerMode) mode {
+@@ -475,33 +472,7 @@ -(BOOL) isBackgroundMusicPlaying {
+ //ringer mute switch to off (i.e. enables sound) therefore polling is the only reliable way to
+ //determine ringer switch state
+ -(BOOL) isDeviceMuted {
+-
+-#if TARGET_IPHONE_SIMULATOR
+-    //Calling audio route stuff on the simulator causes problems
+     return NO;
+-#else    
+-    CFStringRef newAudioRoute;
+-    UInt32 propertySize = sizeof (CFStringRef);
+-    
+-    AudioSessionGetProperty (
+-                             kAudioSessionProperty_AudioRoute,
+-                             &propertySize,
+-                             &newAudioRoute
+-                             );
+-    
+-    if (newAudioRoute == NULL) {
+-        //Don't expect this to happen but playing safe otherwise a null in the CFStringCompare will cause a crash
+-        return YES;
+-    } else {    
+-        CFComparisonResult newDeviceIsMuted =    CFStringCompare (
+-                                                                 newAudioRoute,
+-                                                                 (CFStringRef) @"",
+-                                                                 0
+-                                                                 );
+-        
+-        return (newDeviceIsMuted == kCFCompareEqualTo);
+-    }    
+-#endif
+ }    
+ 
+ #pragma mark Audio Interrupt Protocol
+diff --git a/cocos/audio/mac/CDXMacOSXSupport.h b/cocos/audio/mac/CDXMacOSXSupport.h
+index ccab553..86f4b8e 100644
+--- a/cocos/audio/mac/CDXMacOSXSupport.h
++++ b/cocos/audio/mac/CDXMacOSXSupport.h
+@@ -40,19 +40,6 @@
+ #import <Foundation/Foundation.h>
+ #import <AppKit/NSSound.h>
+ 
+-enum AudioSessionProperties {
+-	kAudioSessionProperty_OtherAudioIsPlaying,
+-	kAudioSessionProperty_AudioRoute	
+-};
+-#ifdef __cplusplus
+-extern "C" {
+-#endif	
+-	
+-extern OSStatus AudioSessionGetProperty(UInt32 inID, UInt32 *ioDataSize, void *outData);    
+-
+-#ifdef __cplusplus
+-}
+-#endif
+ /**
+  Based on AVAudioPlayer.h header in AVFoundation headers
+  */
+diff --git a/cocos/audio/mac/CDXMacOSXSupport.mm b/cocos/audio/mac/CDXMacOSXSupport.mm
+index 57fb53a..689885a 100644
+--- a/cocos/audio/mac/CDXMacOSXSupport.mm
++++ b/cocos/audio/mac/CDXMacOSXSupport.mm
+@@ -37,10 +37,7 @@ of this software and associated documentation files (the "Software"), to deal
+ NSString *const AVAudioSessionCategoryPlayAndRecord = @"AVAudioSessionCategoryPlayAndRecord";
+ NSString *const AVAudioSessionCategoryAudioProcessing = @"AVAudioSessionCategoryAudioProcessing";
+ 
+-OSStatus AudioSessionGetProperty(UInt32 inID, UInt32 *ioDataSize, void *outData) {
+-	//TODO: set outData appropriately
+-	return 0;
+-}    
++    
+ 
+ @implementation AVAudioPlayer
+ 
+diff --git a/cocos/base/CCPlatformMacros.h b/cocos/base/CCPlatformMacros.h
+index 4d7c837..3ed1450 100644
+--- a/cocos/base/CCPlatformMacros.h
++++ b/cocos/base/CCPlatformMacros.h
+@@ -30,7 +30,13 @@ Copyright (c) 2013-2014 Chukong Technologies
+  */
+ #include "base/ccConfig.h"
+ #include "base/CCPlatformConfig.h"
+-#include "CCPlatformDefine.h"
++#if CC_TARGET_PLATFORM == CC_PLATFORM_MAC
++    #include "platform/mac/CCPlatformDefine.h"
++#elif CC_TARGET_PLATFORM == CC_PLATFORM_IOS
++    #include "platform/ios/CCPlatformDefine.h"
++#else
++    #include "CCPlatformDefine.h"
++#endif
+ 
+ /**
+  * define a create function for a specific type, such as Layer
+diff --git a/cocos/base/ZipUtils.h b/cocos/base/ZipUtils.h
+index d6b1e20..6ee6f0b 100644
+--- a/cocos/base/ZipUtils.h
++++ b/cocos/base/ZipUtils.h
+@@ -27,7 +27,13 @@ THE SOFTWARE.
+ 
+ #include <string>
+ #include "base/CCPlatformConfig.h"
+-#include "CCPlatformDefine.h"
++#if CC_TARGET_PLATFORM == CC_PLATFORM_MAC
++    #include "platform/mac/CCPlatformDefine.h"
++#elif CC_TARGET_PLATFORM == CC_PLATFORM_IOS
++    #include "platform/ios/CCPlatformDefine.h"
++#else
++    #include "CCPlatformDefine.h"
++#endif
+ #include "base/CCPlatformMacros.h"
+ 
+ #if (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
+diff --git a/cocos/platform/mac/CCDevice.mm b/cocos/platform/mac/CCDevice.mm
+index 0d13a3a..dd55037 100644
+--- a/cocos/platform/mac/CCDevice.mm
++++ b/cocos/platform/mac/CCDevice.mm
+@@ -166,7 +166,6 @@ static bool _initWithString(const char * text, Device::TextAlign align, const ch
+         
+ 		NSInteger POTWide = dimensions.width;
+ 		NSInteger POTHigh = MAX(dimensions.height, realDimensions.height);
+-		unsigned char*			data;
+ 		//Alignment
+         
+ 		CGFloat xPadding = 0;
+@@ -186,30 +185,39 @@ static bool _initWithString(const char * text, Device::TextAlign align, const ch
+ 		
+ 		
+ 		NSRect textRect = NSMakeRect(xPadding, POTHigh - dimensions.height + yPadding, realDimensions.width, realDimensions.height);
+-		//Disable antialias
+ 		
+-		[[NSGraphicsContext currentContext] setShouldAntialias:NO];
+-		
+-		NSImage *image = [[NSImage alloc] initWithSize:NSMakeSize(POTWide, POTHigh)];
+-        
+-		[image lockFocus];
+-        
+-        // patch for mac retina display and lableTTF
+-        [[NSAffineTransform transform] set];
+-		
+-		//[stringWithAttributes drawAtPoint:NSMakePoint(xPadding, offsetY)]; // draw at offset position
++		// Focus capture can return RGBA16Float on modern macOS. Textures require
++		// tightly packed, premultiplied RGBA8 (alpha last), regardless of display.
++		NSBitmapImageRep *bitmap = [[NSBitmapImageRep alloc]
++            initWithBitmapDataPlanes:NULL
++            pixelsWide:POTWide pixelsHigh:POTHigh
++            bitsPerSample:8 samplesPerPixel:4 hasAlpha:YES isPlanar:NO
++            colorSpaceName:NSDeviceRGBColorSpace bitmapFormat:0
++            bytesPerRow:POTWide * 4 bitsPerPixel:32];
++        CC_BREAK_IF(!bitmap);
++        NSGraphicsContext *context = [NSGraphicsContext graphicsContextWithBitmapImageRep:bitmap];
++        if (!context) {
++            [bitmap release];
++            break;
++        }
++        NSUInteger textureSize = POTWide * POTHigh * 4;
++        memset([bitmap bitmapData], 0, textureSize);
++        [NSGraphicsContext saveGraphicsState];
++        [NSGraphicsContext setCurrentContext:context];
++
++		// Keep pixel-font edges crisp in the actual bitmap context.
++		[context setShouldAntialias:NO];
++
++		CGContextRef cgContext = [context CGContext];
++		CGContextSetShouldAntialias(cgContext, false);
++		CGContextSetShouldSmoothFonts(cgContext, false);
+ 		[stringWithAttributes drawInRect:textRect];
+-		//[stringWithAttributes drawInRect:textRect withAttributes:tokenAttributesDict];
+-		NSBitmapImageRep *bitmap = [[NSBitmapImageRep alloc] initWithFocusedViewRect:NSMakeRect (0.0f, 0.0f, POTWide, POTHigh)];
+-		[image unlockFocus];
+-		
+-		data = (unsigned char*) [bitmap bitmapData];  //Use the same buffer to improve the performance.
+-		
+-		NSUInteger textureSize = POTWide*POTHigh*4;
++        [context flushGraphics];
++        [NSGraphicsContext restoreGraphicsState];
+ 		
+ 		unsigned char* dataNew = (unsigned char*)malloc(sizeof(unsigned char) * textureSize);
+ 		if (dataNew) {
+-			memcpy(dataNew, data, textureSize);
++			memcpy(dataNew, [bitmap bitmapData], textureSize);
+ 			// output params
+ 			info->width = static_cast<int>(POTWide);
+ 			info->height = static_cast<int>(POTHigh);
+@@ -219,7 +227,6 @@ static bool _initWithString(const char * text, Device::TextAlign align, const ch
+ 			ret = true;
+ 		}
+ 		[bitmap release];
+-		[image release];
+ 	} while (0);
+     return ret;
+ }
+diff --git a/download-deps.py b/download-deps.py
+index 994c942..487ca18 100755
+--- a/download-deps.py
++++ b/download-deps.py
+@@ -48,7 +48,7 @@ from sys import stdout
+ from distutils.errors import DistutilsError
+ from distutils.dir_util import copy_tree, remove_tree
+ 
+-class UnrecognizedFormat:
++class UnrecognizedFormat(Exception):
+     def __init__(self, prompt):
+         self._prompt = prompt
+     def __str__(self):
+@@ -80,24 +80,24 @@ class CocosZipInstaller(object):
+             print("==> version file doesn't exist")
+ 
+     def get_input_value(self, prompt):
+-        ret = raw_input(prompt)
++        ret = input(prompt)
+         ret.rstrip(" \t")
+         return ret
+ 
+     def download_file(self):
+-        print("==> Ready to download '%s' from '%s'" % (self._filename, self._url))
+-        import urllib2
++        print(("==> Ready to download '%s' from '%s'" % (self._filename, self._url)))
++        import urllib.request, urllib.error, urllib.parse
+         try:
+-            u = urllib2.urlopen(self._url)
+-        except urllib2.HTTPError as e:
++            u = urllib.request.urlopen(self._url)
++        except urllib.error.HTTPError as e:
+             if e.code == 404:
+-                print("==> Error: Could not find the file from url: '%s'" % (self._url))
+-            print("==> Http request failed, error code: " + str(e.code) + ", reason: " + e.read())
++                print(("==> Error: Could not find the file from url: '%s'" % (self._url)))
++            print(("==> Http request failed, error code: " + str(e.code) + ", reason: " + e.read()))
+             sys.exit(1)
+ 
+         f = open(self._filename, 'wb')
+         meta = u.info()
+-        content_len = meta.getheaders("Content-Length")
++        content_len = meta.get_all("Content-Length")
+         file_size = 0
+         if content_len and len(content_len) > 0:
+             file_size = int(content_len[0])
+@@ -105,7 +105,7 @@ class CocosZipInstaller(object):
+             # github server may not reponse a header information which contains `Content-Length`,
+             # therefore, the size needs to be written hardcode here. While server doesn't return
+             # `Content-Length`, use it instead
+-            print("==> WARNING: Couldn't grab the file size from remote, use 'zip_file_size' section in '%s'" % self._config_path)
++            print(("==> WARNING: Couldn't grab the file size from remote, use 'zip_file_size' section in '%s'" % self._config_path))
+             file_size = self._zip_file_size
+ 
+         print("==> Start to download, please wait ...")
+@@ -134,7 +134,7 @@ class CocosZipInstaller(object):
+                     status = r"Downloaded: %6dK, Speed: %6.2f KB/S " % (file_size_dl / 1000, speed)
+ 
+                 status = status + chr(8)*(len(status)+1)
+-                print(status),
++                print((status), end=' ')
+                 sys.stdout.flush()
+                 block_size_per_second = 0
+                 old_time = new_time
+@@ -205,7 +205,7 @@ class CocosZipInstaller(object):
+             if not zipfile.is_zipfile(self._filename):
+                 raise UnrecognizedFormat("%s is not a zip file" % (self._filename))
+         except UnrecognizedFormat as e:
+-            print("==> Unrecognized zip format from your local '%s' file!" % (self._filename))
++            print(("==> Unrecognized zip format from your local '%s' file!" % (self._filename)))
+             if os.path.isfile(self._filename):
+                 os.remove(self._filename)
+             print("==> Download it from internet again, please wait...")
+@@ -256,16 +256,10 @@ class CocosZipInstaller(object):
+                 elif self.ask_to_delete_downloaded_zip_file():
+                     os.remove(self._filename)
+         else:
+-            print("==> Download (%s) finish!" % self._filename)
++            print(("==> Download (%s) finish!" % self._filename))
+ 
+ 
+ def _check_python_version():
+-    major_ver = sys.version_info[0]
+-    if major_ver > 2:
+-        print ("The python version is %d.%d. But python 2.x is required. (Version 2.7 is well tested)\n"
+-               "Download it here: https://www.python.org/" % (major_ver, sys.version_info[1]))
+-        return False
+-
+     return True
+ 
+ def main():
+diff --git a/templates/lua-template-runtime/runtime/config.json b/templates/lua-template-runtime/runtime/config.json
+index 4f28c96..b281a4a 100644
+--- a/templates/lua-template-runtime/runtime/config.json
++++ b/templates/lua-template-runtime/runtime/config.json
+@@ -1,6 +1,6 @@
+ {
+     "version":"v3-lua-runtime-1.3.1",
+     "zip_file_size":"24660780",
+-    "repo_name":"cocos-runtime-bin",
++    "repo_name":"deprecated-cocos-binary-for-code-ide",
+     "repo_parent":"https://github.com/chukong/"
+ }

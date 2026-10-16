@@ -1,0 +1,4 @@
+ 8d1888ac8f2846a67094905b7f362f746ae5a31f plugin (8d1888a)
+ c307f62357e42d2e7e671f4741f855dc8a5fde3a tests/cpp-tests/Resources/ccs-res (c307f62)
+ 6fcfc80c68b22de00342cc3fa8e0f3168bcf5e06 tools/bindings-generator (remotes/origin/vm-35-g6fcfc80)
+ 751afb6fb1cc20665990157530890a6f3200e0d7 tools/cocos2d-console (751afb6)
