@@ -1,9 +1,12 @@
-# Afroman Web — milestone 1
+# Afroman Web — title and menu milestone
 
 This is an isolated checkout at ~/Documents/Afroman-web, branch codex/web-port.
 The Mac preservation checkout and its engine are not used by this build.
 
 ## Build and run
+
+Prerequisites: Git, Python 3, and FFmpeg on PATH (tested with FFmpeg 8.1.1).
+FFmpeg is needed at build time only; browser users do not install it.
 
 ```sh
 ./proj.web/bootstrap.sh   # first setup; downloads SDK and pinned upstream sources
@@ -13,11 +16,18 @@ The Mac preservation checkout and its engine are not used by this build.
 
 Open http://127.0.0.1:8000/afroman.html. PORT can override the local port.
 Use ./proj.web/build.sh Release for an optimized compilation. This milestone is
-a development engine test, not the final portfolio release.
+a development game build, not the final portfolio release.
 
 Output: build-web/afroman.html, afroman.js, afroman.wasm, and afroman.data.
 All four files are needed on a static host. Assets are packaged automatically
-from Resources at /Resources in Emscripten's filesystem. Serve over HTTP;
+from Resources at /Resources in Emscripten's filesystem. The packaging step
+stages a separate generated tree and converts song.mp3 to 16-bit stereo PCM WAV
+(44.1 kHz, 31.739 seconds). Safari rejects the original MP3, and FFmpeg reports
+an invalid-backstep warning while decoding its legacy stream. The original
+Resources/song.mp3 is unchanged; the audio adapter maps that game filename to
+browser-audio/song.wav. web-assets.json records original/converted checksums.
+The generated data package is larger until production compression is addressed.
+Serve over HTTP;
 do not open the HTML as a file:// URL. The Python server supplies the WASM MIME type.
 
 ## Pinned inputs
@@ -44,13 +54,20 @@ application main-loop scheduling, virtual filesystem paths, and FreeType text.
 The text adapter reads the bundled pixel font without requiring installation.
 Text layout is provisional: ASCII HUD text, monochrome glyphs, basic alignment;
 stroke/shadow, multiline layout and final HUD placement still need validation.
-Audio is not yet wired into this smoke target. No game audio implementation has
-been replaced with silent stubs.
+SimpleAudioEngine now has a Web Audio backend with music/effect playback,
+pause/resume/rewind/stop and volume controls. The Play button resumes AudioContext
+and decodes all ten bundled audio files before calling the C++ main function.
+Missing/undecodable audio is an explicit startup error. Audio playback, latency,
+background-tab behavior and level 2 synchronization still require verification.
 
-The main target currently runs a Cocos scene with a background and rotating green
-polygon. It does not compile Afroman's scenes yet. Original game sources are retained
-for the next milestone. The browser platform input adapter is present but gameplay
-input and scaled pointer coordinates still need testing and refinement.
+The main target compiles all seven original game translation units and starts
+AppDelegate/StartScreen. The original animated title and three-level selection menu
+render with real JPEG/PNG resources. Enter opens the menu; mouse clicks select levels.
+Ordinary and keypad Enter map to the game's existing keypad-Enter constant.
+Pointer coordinates account for CSS scaling; keyboard events are handled while the
+canvas is focused and held keys are released on blur. Repeated Enter cannot stack
+duplicate selection menus. Arrow keys control movement/jumping; level 2 drums use
+Space/F/J/R/T/Y/U. The milestone-1 scene is retained as smoke.cpp for reference.
 
 cocos-web.patch applies only to the pristine pinned web engine. It changes platform
 detection to __EMSCRIPTEN__, exposes browser platform headers, fixes obsolete nullptr
@@ -66,11 +83,12 @@ TIFF optional external compression integrations are not enabled in this prototyp
 
 ## Next milestones
 
-Bring in the seven authoritative game translation units, real title assets, and
-SimpleAudioEngine browser backend; validate title/menu input and level one.
-Then validate fonts, audio unlock/pause/resume, all levels, and production packaging.
+Validate full level-one gameplay/collision/pause/restart, then remaining HUDs,
+audio playback/unlock/pause/resume, all three levels, and production packaging.
 Level 2's old Windows frame-dependent timing is not authoritative; recalibrate
-against the audio clock rather than preserving existing drift.
+against the audio clock rather than preserving existing drift. Current browser
+exit buttons still follow legacy process-exit behavior and need a browser return
+flow before considering the game complete.
 
 ## Milestone 1 validation (2026-10-16)
 
@@ -79,3 +97,16 @@ loaded the static HTML/JS/WASM/data bundle and reported WebGL 1 / GLES2. Visual
 inspection verified the background layer and rotating green polygon, exercising
 both legacy client arrays and VBO-backed drawing. This validates canvas creation
 and the Cocos scheduler/action/render loop, not Afroman gameplay or audio.
+
+## Title/menu validation (2026-10-16)
+
+- All seven game sources compiled and linked as WebAssembly.
+- Safari decoded all ten packaged audio files with a running AudioContext.
+- Real title intro/loop rendered; Enter opened the three-level selection menu.
+- Clicking level 1 loaded its TMX maps, sprite atlas and white pixel-font timer.
+- Holding Right moved the player/camera without scrolling the page.
+- Resource audit found every TMX-referenced image and every staged source asset,
+  apart from the documented MP3-to-WAV alias.
+
+These are smoke checks, not a full level playthrough. Audio decoding is verified;
+actual output/latency and rhythm synchronization are not yet verified.

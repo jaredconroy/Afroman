@@ -89,6 +89,7 @@ void StartScreen::startAnim2(float delta){
 }
 
 void StartScreen::selectMenu(){
+	if (pauseMenu2) return; // Opening the existing menu again must not stack duplicate buttons.
 	Vector <MenuItem*> menuItems;
 
 	MenuItem* level1 = MenuItemImage::create("level1button.png", "level1button.png", this, menu_selector(StartScreen::selectLevel1));

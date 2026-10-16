@@ -59,12 +59,38 @@ target_include_directories(cocos_web PUBLIC
  "${THIRD}/edtaa3func" "${ROOT}/vendor/libwebp/src/webp"
  "${ROOT}/vendor/libtiff/libtiff" "${CMAKE_CURRENT_BINARY_DIR}/tiff/libtiff")
 target_link_libraries(cocos_web PUBLIC tiff webp)
-add_executable(afroman main.cpp)
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+find_program(FFMPEG_EXECUTABLE NAMES ffmpeg REQUIRED)
+set(WEB_RESOURCES "${CMAKE_CURRENT_BINARY_DIR}/assets/Resources")
+file(GLOB_RECURSE ASSET_INPUTS CONFIGURE_DEPENDS "${ROOT}/Resources/*")
+add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/assets/assets.stamp"
+ COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_LIST_DIR}/package_assets.py"
+  --source "${ROOT}/Resources" --output "${WEB_RESOURCES}" --ffmpeg "${FFMPEG_EXECUTABLE}"
+ DEPENDS ${ASSET_INPUTS} "${CMAKE_CURRENT_LIST_DIR}/package_assets.py"
+ COMMENT "Package assets and convert original MP3 to browser PCM audio" VERBATIM)
+add_custom_target(web_assets DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/assets/assets.stamp")
+add_executable(afroman main.cpp
+ "${ROOT}/Classes/AppDelegate.cpp"
+ "${ROOT}/Classes/GameScene.cpp"
+ "${ROOT}/Classes/GameScene2.cpp"
+ "${ROOT}/Classes/GameScene3.cpp"
+ "${ROOT}/Classes/Level.cpp"
+ "${ROOT}/Classes/Player.cpp"
+ "${ROOT}/Classes/StartScreen.cpp")
+target_include_directories(afroman PRIVATE "${ROOT}/Classes")
+target_include_directories(cocos_web PUBLIC "${ENGINE}/audio/include")
+add_dependencies(afroman web_assets)
 target_link_libraries(afroman PRIVATE cocos_web)
 set_target_properties(afroman PROPERTIES SUFFIX ".html")
 target_link_options(afroman PRIVATE -sFULL_ES2=1 -sUSE_ZLIB=1 -sUSE_LIBPNG=1 -sUSE_LIBJPEG=1 -sUSE_FREETYPE=1
  -sALLOW_MEMORY_GROWTH=1 -sASSERTIONS=2 -sGL_ASSERTIONS=1 -sSTACK_SIZE=1048576
+ "-sEXPORTED_RUNTIME_METHODS=[\"callMain\"]"
+ "--pre-js=${CMAKE_CURRENT_LIST_DIR}/audio.js"
  "--shell-file=${CMAKE_CURRENT_LIST_DIR}/shell.html"
- "--preload-file=${ROOT}/Resources@/Resources")
+ "--preload-file=${WEB_RESOURCES}@/Resources")
 
 set_property(TARGET afroman APPEND PROPERTY LINK_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/shell.html")
+
+set_property(TARGET afroman APPEND PROPERTY LINK_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/audio.js")
+
+set_property(TARGET afroman APPEND PROPERTY LINK_DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/assets/assets.stamp")

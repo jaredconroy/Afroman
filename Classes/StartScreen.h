@@ -24,7 +24,7 @@ public:
 
 	Follow *camera;
 
-	Menu *pauseMenu2;
+	Menu *pauseMenu2 = nullptr;
 
 	vector<EventKeyboard::KeyCode> heldKeys;
 

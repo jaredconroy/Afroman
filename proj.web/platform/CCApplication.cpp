@@ -11,7 +11,7 @@ Application* Application::getInstance() { return sm_pSharedApplication; }
 Application* Application::sharedApplication() { return getInstance(); }
 int Application::run() {
  if(!applicationDidFinishLaunching()) return 1;
- emscripten_set_main_loop([] { Director::getInstance()->mainLoop(); static int frames=0; if(++frames==60) log("AFROMAN_M1: 60 frames rendered"); },60,true);
+ emscripten_set_main_loop([] { Director::getInstance()->mainLoop(); static int frames=0; if(++frames==60) log("AFROMAN_WEB: 60 frames rendered"); },60,true);
  return 0;
 }
 void Application::setAnimationInterval(double interval) { _animationInterval=interval*1000000; }

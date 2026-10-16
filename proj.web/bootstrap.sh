@@ -1,6 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
+command -v ffmpeg >/dev/null || { echo "FFmpeg is required to package the browser music asset." >&2; exit 1; }
 mkdir -p .tools vendor
 clone_pinned() {
  local url="$1" tag="$2" revision="$3" destination="$4"

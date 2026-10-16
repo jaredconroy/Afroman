@@ -1,6 +1,10 @@
 #include "AppDelegate.h"
 #include "StartScreen.h"
+#if defined(__EMSCRIPTEN__)
+#include "CCGLView.h"
+#else
 #include "platform/desktop/CCGLView.h"
+#endif
 
 USING_NS_CC;
 

@@ -1,10 +1,30 @@
 <!doctype html>
 <html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Afroman Web — engine smoke test</title>
-<style>body{margin:0;background:#10141c;color:#e4e8f0;font:16px system-ui;text-align:center}canvas{display:block;margin:20px auto;max-width:100%;height:auto;image-rendering:pixelated}pre{white-space:pre-wrap}</style>
-<h1>Afroman Web</h1><p id="status">Loading the C++ engine…</p>
-<canvas id="canvas" width="1050" height="640" tabindex="0" oncontextmenu="event.preventDefault()"></canvas>
-<pre id="log"></pre>
-<script>var Module={canvas:document.getElementById('canvas'),print:function(s){console.log(s);document.getElementById('log').textContent+=s+'\n';if(s.includes('AFROMAN_M1'))document.getElementById('status').textContent='Cocos2d-x 3.2 running in WebAssembly';if(s.includes('60 frames'))document.getElementById('status').textContent='Verified: 60 Cocos frames rendered';},printErr:function(s){console.error(s);document.getElementById("log").textContent+="ERROR: "+s+"\n";},onAbort:function(s){document.getElementById('status').textContent='Startup failed: '+s;}};</script>
+<title>Afroman — Play in your browser</title>
+<style>body{margin:0;background:#10141c;color:#e4e8f0;font:16px system-ui;text-align:center}h1{margin:16px 0 8px}canvas{display:block;margin:16px auto;max-width:100%;height:auto;image-rendering:pixelated;outline:none}button{font:inherit;padding:10px 32px;border:0;border-radius:5px;background:#2cdb8d;color:#062819;cursor:pointer}button:disabled{opacity:.5;cursor:wait}details{max-width:1050px;margin:20px auto;text-align:left}pre{white-space:pre-wrap;font-size:12px}#status{min-height:24px}</style>
+<h1>Afroman</h1><p id="status" role="status">Loading game assets…</p>
+<button id="play" disabled>Play Afroman</button>
+<p>Press Enter at the title, then click a level. Arrow keys move and jump. Level 2 drums: Space, F, J, R, T, Y, U.</p>
+<canvas id="canvas" width="1050" height="640" tabindex="0" aria-label="Afroman game" oncontextmenu="event.preventDefault()"></canvas>
+<details><summary>Diagnostics</summary><pre id="log"></pre></details>
+<script>
+const statusText=document.getElementById('status'), playButton=document.getElementById('play');
+const appendLog=s=>document.getElementById('log').textContent+=s+'\n';
+var Module={noInitialRun:true,canvas:document.getElementById('canvas'),
+ print:function(s){console.log(s);appendLog(s);},
+ printErr:function(s){console.error(s);appendLog('ERROR: '+s);},
+ onAbort:function(s){statusText.textContent='Game failed to start: '+s;},
+ onRuntimeInitialized:function(){playButton.disabled=false;statusText.textContent='Ready to play.';}
+};
+playButton.addEventListener('click',async()=>{
+ playButton.disabled=true;statusText.textContent='Preparing sound…';
+ try {
+  await globalThis.AfromanAudio.prepare();
+  playButton.hidden=true;statusText.textContent='Game running. Click the canvas to focus controls.';
+  Module.canvas.focus();Module.callMain([]);
+ } catch(error) {console.error(error);appendLog(String(error));statusText.textContent='Could not start: '+error.message;playButton.disabled=false;}
+});
+Module.canvas.addEventListener('pointerdown',()=>Module.canvas.focus());
+</script>
 {{{ SCRIPT }}}
 </html>
