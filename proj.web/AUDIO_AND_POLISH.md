@@ -4,7 +4,7 @@ All additions live in the separate Afroman-web checkout. The Mac archive is unch
 
 ## Replace the placeholder audio
 
-The seven files in `Resources/web-audio/` are original synthesized placeholders,
+The gameplay files in `Resources/web-audio/` are original synthesized placeholders,
 created by `proj.web/generate_placeholder_audio.py`; no third-party recordings or
 music were downloaded. Music uses pulse/triangle voices and noise percussion for
 an 8-bit sound, stored as ordinary 16-bit PCM WAV for dependable browser decoding.
@@ -92,3 +92,31 @@ SCORE and AFROMAN lettering is retained; source PNGs are unchanged.
 
 Safari verified the top-right score and BASS rail remain undimmed and clear of
 the gray backing; SCORE/AFROMAN lettering and all three buttons render correctly.
+
+## Title sounds
+
+Three additional original synthesized placeholders are generated independently by
+`proj.web/generate_title_audio.py` (manual only; overwrites these three files):
+
+| File | Cue |
+| --- | --- |
+| `spotlight.wav` | Left spotlight at intro frame 2 (2 s), right at frame 3 (3 s), with slight stereo/pitch variation |
+| `neon-plink.wav` | One glass-like plink when the neon sequence first appears (4 s) |
+| `neon-buzz.wav` | Continuous looping 60 Hz electrical hum with harmonics |
+
+The eleven neon frames each last 140 ms. Brightness measured from the artwork
+peaks at frame 0 and reaches its minimum at frames 5–6. The buzz's per-voice gain
+follows those same displayed frame callbacks, from 100% to 25% and back, with
+25 ms smoothing to prevent clicks. It does not change music or other effect gains.
+Both sound and artwork therefore pause when the browser suspends the game.
+
+Opening level selection immediately stops all title-owned sounds and prevents
+further cues behind that menu. Leaving the title scene stops its owned voices too;
+returning directly to level selection does not replay the cues. EXIT to the title
+starts a fresh sequence. Replace any of these WAV files and rebuild using the
+same workflow above; a buzz replacement should be a short seamless steady loop,
+since the animation applies the volume envelope during playback.
+
+Safari check: the opening reached the animated neon stage with active audio;
+Enter opened level selection and cleared Safari's active-audio indicator. The
+final subjective timbre and loudness remain adjustable by replacing the WAVs.

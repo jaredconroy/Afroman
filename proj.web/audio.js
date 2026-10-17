@@ -86,6 +86,15 @@ globalThis.AfromanAudio = {
     this.start(v);
   },
   stop(id) { const v = this.voices.get(id); if (v) { this.detach(v); this.voices.delete(id); } },
+  effectGain(id, value) {
+    const voice = this.voices.get(id);
+    if (!voice || id === 0) return;
+    voice.gain = Math.max(0, Math.min(1, value));
+    if (!voice.gainNode) return;
+    const gain = voice.gainNode.gain;
+    if (gain.setTargetAtTime) gain.setTargetAtTime(voice.gain, this.context.currentTime, 0.025);
+    else gain.value = voice.gain;
+  },
   effects(action) { for (const id of [...this.voices.keys()]) if (id !== 0) this[action](id); },
   rewind() { const v = this.voices.get(0); if (v) { this.detach(v); v.offset = 0; this.start(v); } },
   // Prefer the audio device's presentation clock over the render-ahead clock.

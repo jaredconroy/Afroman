@@ -4,6 +4,12 @@
 #include "GameScene.h"
 #include "GameScene2.h"
 #include "GameScene3.h"
+#if defined(__EMSCRIPTEN__)
+#include <emscripten.h>
+EM_JS(void, afroman_title_gain, (unsigned id, float value), {
+    globalThis.AfromanAudio.effectGain(id,value);
+});
+#endif
 
 
 Scene* StartScreen::createScene(bool showLevelSelection)
@@ -47,7 +53,22 @@ bool StartScreen::init()
 	this->addChild(sprite, 30, "first_anim");
 	anim->setDelayPerUnit(1.0f);
 	auto action = Animate::create(anim);
+#if defined(__EMSCRIPTEN__)
+    Vector<FiniteTimeAction*> intro;
+    for (int frame=0; frame<4; ++frame) {
+        intro.pushBack(CallFunc::create([this,frame]() {
+            sprite->setTexture("start1/start" + to_string(frame) + ".jpg");
+            if (titleAudioEnabled && frame >= 2)
+                titleEffects.push_back(CocosDenshion::SimpleAudioEngine::getInstance()->playEffect(
+                    "web-audio/spotlight.wav",false,frame==2 ? 1.0f : 1.08f,
+                    frame==2 ? -0.35f : 0.35f,0.8f));
+        }));
+        intro.pushBack(DelayTime::create(1.0f));
+    }
+    sprite->runAction(Sequence::create(intro));
+#else
 	sprite->runAction(action);
+#endif
 
 	cocos2d::Animation *anim2 = Animation::create();
 
@@ -63,7 +84,29 @@ bool StartScreen::init()
 
 	anim2->setDelayPerUnit(.14f);
 	auto action2 = Animate::create(anim2);
+#if defined(__EMSCRIPTEN__)
+    Vector<FiniteTimeAction*> neon;
+    for (int frame=0; frame<11; ++frame) {
+        neon.pushBack(CallFunc::create([this,frame]() {
+            sprite2->setTexture("start2/start" + to_string(frame) + ".jpg");
+            if (!titleAudioEnabled) return;
+            auto audio = CocosDenshion::SimpleAudioEngine::getInstance();
+            if (!neonStarted) {
+                neonStarted = true;
+                titleEffects.push_back(audio->playEffect("web-audio/neon-plink.wav"));
+                neonBuzz = audio->playEffect("web-audio/neon-buzz.wav",true);
+                titleEffects.push_back(neonBuzz);
+            }
+            // Measured frame brightness: 0 brightest, 5/6 dimmest, then rising.
+            const float gain[] = {1,.85f,.70f,.55f,.40f,.25f,.25f,.40f,.55f,.70f,.85f};
+            afroman_title_gain(neonBuzz,gain[frame]);
+        }));
+        neon.pushBack(DelayTime::create(.14f));
+    }
+    sprite2->runAction(RepeatForever::create(Sequence::create(neon)));
+#else
 	sprite2->runAction(RepeatForever::create(action2));
+#endif
 
 	this->schedule(schedule_selector(StartScreen::startAnim2));
 
@@ -98,6 +141,9 @@ void StartScreen::startAnim2(float delta){
 }
 
 void StartScreen::selectMenu(){
+#if defined(__EMSCRIPTEN__)
+    stopTitleSounds();
+#endif
 	if (pauseMenu2) return; // Opening the existing menu again must not stack duplicate buttons.
 	Vector <MenuItem*> menuItems;
 
@@ -178,3 +224,17 @@ StartScreen::StartScreen(void)
 StartScreen::~StartScreen(void)
 {
 }
+
+#if defined(__EMSCRIPTEN__)
+void StartScreen::stopTitleSounds() {
+    titleAudioEnabled = false;
+    auto audio = CocosDenshion::SimpleAudioEngine::getInstance();
+    for (unsigned id : titleEffects) audio->stopEffect(id);
+    titleEffects.clear();
+    neonBuzz = 0;
+}
+void StartScreen::onExit() {
+    stopTitleSounds();
+    Layer::onExit();
+}
+#endif

@@ -28,6 +28,15 @@ public:
 
 	vector<EventKeyboard::KeyCode> heldKeys;
 
+#if defined(__EMSCRIPTEN__)
+    bool titleAudioEnabled = true;
+    bool neonStarted = false;
+    unsigned neonBuzz = 0;
+    std::vector<unsigned> titleEffects;
+    void stopTitleSounds();
+    void onExit() override;
+#endif
+
 	//CONSTRUCTOR & METHODS
 
 	virtual void onKeyPressed(EventKeyboard::KeyCode keyCode, Event* event);
