@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stage original assets and decode legacy music to browser-compatible PCM WAV."""
+"""Stage assets and normalize browser audio without changing source recordings."""
 import argparse
 import hashlib
 import json
@@ -17,14 +17,35 @@ if args.output.resolve() == args.source.resolve() or args.output.resolve() in ar
 if args.output.exists():
     shutil.rmtree(args.output)
 args.output.mkdir(parents=True, exist_ok=True)
-shutil.copytree(args.source, args.output, dirs_exist_ok=True,
-                ignore=lambda directory, names: ['song.mp3'] if Path(directory) == args.source else [])
+def ignore_assets(directory, names):
+    folder = Path(directory)
+    ignored = [name for name in names if name == '.DS_Store' or
+               (Path(name).suffix.lower() in {'.wav','.mp3','.ogg'} and Path(name).stem.endswith('_old'))]
+    if folder == args.source:
+        ignored.append('song.mp3')
+    if folder == args.source / 'web-audio':
+        ignored.extend(name for name in names if Path(name).suffix.lower() in {'.mp3','.ogg'})
+    return ignored
+
+shutil.copytree(args.source, args.output, dirs_exist_ok=True, ignore=ignore_assets)
+# Source replacements may be 24-bit/float WAV, MP3, or Ogg. Stage PCM WAVs for
+# predictable browser decoding. A same-stem WAV takes priority over MP3/Ogg.
+custom_audio = []
+for source in sorted((args.source / 'web-audio').glob('*')):
+    if source.suffix.lower() not in {'.wav','.mp3','.ogg'} or source.stem.endswith('_old'):
+        continue
+    if source.suffix.lower() != '.wav' and source.with_suffix('.wav').exists():
+        continue
+    destination = args.output / 'web-audio' / (source.stem + '.wav')
+    subprocess.run([args.ffmpeg, '-nostdin', '-v', 'error', '-y', '-i', str(source),
+        '-map_metadata', '-1', '-ar', '44100', '-c:a', 'pcm_s16le', str(destination)], check=True)
+    custom_audio.append(str(destination.relative_to(args.output)))
 audio = args.output / 'browser-audio'
 audio.mkdir(exist_ok=True)
 subprocess.run([args.ffmpeg, '-nostdin', '-v', 'error', '-y', '-i',
     str(args.source / 'song.mp3'), '-map_metadata', '-1', '-fflags', '+bitexact',
     '-flags:a', '+bitexact', '-c:a', 'pcm_s16le', str(audio / 'song.wav')], check=True)
-manifest = {'music_alias': {'song.mp3': 'browser-audio/song.wav'},
+manifest = {'custom_audio': custom_audio, 'music_alias': {'song.mp3': 'browser-audio/song.wav'},
     'original_music_sha256': hashlib.sha256((args.source / 'song.mp3').read_bytes()).hexdigest(),
     'converted_music_sha256': hashlib.sha256((audio / 'song.wav').read_bytes()).hexdigest()}
 (args.output / 'web-assets.json').write_text(json.dumps(manifest, indent=2) + '\n')

@@ -120,3 +120,20 @@ since the animation applies the volume envelope during playback.
 Safari check: the opening reached the animated neon stage with active audio;
 Enter opened level selection and cleared Safari's active-audio indicator. The
 final subjective timbre and loudness remain adjustable by replacing the WAVs.
+
+## Refreshed user sounds and guitar/crowd cue
+
+The replacement flush, landing, spotlight, neon-plink, and buzz recordings are
+kept exactly as supplied in `Resources/web-audio/`. `guitar.mp3` is user supplied;
+the asset packager converts it to staged `web-audio/guitar.wav`. Guitar plays once
+at neon turn-on at 70% gain, alongside the existing plink and animated buzz.
+`crowd.wav` is an original synthesized distant crowd-like placeholder (filtered
+noise plus layered cheering tones), mixed at 35% gain and looped from neon
+turn-on until Enter. Replace it with your own crowd recording if desired.
+`generate_crowd_audio.py` restores only this placeholder.
+
+Custom `.wav`, `.mp3`, and `.ogg` files are now staged as 44.1 kHz, 16-bit PCM WAV;
+use the same basename when replacing a cue. A same-basename source WAV takes
+priority over MP3/Ogg. Packaging excludes `_old` audio backups and `.DS_Store`,
+while leaving them untouched on disk. The existing scripts that restore original
+placeholder sounds are never run by a normal build.
