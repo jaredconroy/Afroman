@@ -5,6 +5,7 @@
 #include "Level.h"
 #include "Player.h"
 #include "GameCountdown.h"
+#include "SurfaceImpact.h"
 #include <algorithm>
 #include <string>
 #include <vector>
@@ -68,6 +69,7 @@ public:
     LayerColor* bathroomWindowLight = nullptr;
     Sprite* trashBin = nullptr;
     bool touchingTrashBin = false;
+    afroman::SurfaceImpact binTopImpact;
     bool touchingCar = false, carLightsOn = false;
     DrawNode* carLights = nullptr;
     void hitTrashBin();

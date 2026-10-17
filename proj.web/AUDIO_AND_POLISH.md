@@ -222,3 +222,20 @@ interactive gameplay validation remains to be confirmed.
 
 Title guitar now starts 200 ms before neon onset (3.8 seconds into the intro),
 with the visual animation and other title cues unchanged.
+
+## Stable bin impacts and aligned headlights
+
+The bin uses a swept top-plane landing check and a persistent support latch.
+Tile seams cannot rearm it while walking; leaving horizontally or raising the
+feet more than two world pixels above the lid rearms the next landing. A focused
+regression test covers initial landing, repeated seam gaps, jumping/relanding,
+and stepping off without a new impact. Run with:
+`clang++ -std=c++11 -IClasses proj.web/tests/surface-impact.test.cpp -o /tmp/afroman-impact-test && /tmp/afroman-impact-test`.
+
+The headlight beam begins at the existing white pixels (native x2484..2495,
+y216..227), with no new lamp square. It extends to world x5600 at the bin and
+fades through 128 progressively transparent strips to zero opacity. Each light
+toggle plays `Resources/web-audio/car-alarm.wav`, an original synthesized short
+warbling chirp. Replace this file and rebuild to use a sourced recording.
+Build and contact-state regression test pass; live gameplay validation remains
+necessary for the final feel and appearance.

@@ -107,9 +107,16 @@ bool GameScene::init()
     this->addChild(trashBin,11);
     // Headlamp on the authored blue car's front bumper (TMX column 155).
     carLights = DrawNode::create();
-    drawLightRect(carLights,Vec2(4968,1128),Vec2(4992,1144),Color4F(1,1,.88f,1));
-    Vec2 beam[] = {Vec2(4992,1128),Vec2(5250,1064),Vec2(5250,1208),Vec2(4992,1144)};
-    carLights->drawPolygon(beam,4,Color4F(1,1,.8f,.22f),0,Color4F(1,1,1,0));
+    // Existing white lamp pixels: native x2484..2495, y216..227.
+    // Beam starts at their right edge, centered at world y1156; no extra lamp art.
+    for (int i=0; i<128; ++i) {
+        float t0=i/128.f, t1=(i+1)/128.f;
+        float x0=4992+608*t0, x1=4992+608*t1;
+        float h0=12+88*t0, h1=12+88*t1;
+        Vec2 strip[] = {Vec2(x0,1156-h0),Vec2(x1,1156-h1),
+                        Vec2(x1,1156+h1),Vec2(x0,1156+h0)};
+        carLights->drawPolygon(strip,4,Color4F(1,1,.8f,.28f*(1-t1)),0,Color4F(0,0,0,0));
+    }
     carLights->setVisible(false);
     this->addChild(carLights,12);
     // Authored bathroom interior: native TMX x=208..368, y=0..288, at 2x scale.
@@ -533,7 +540,7 @@ void GameScene::getCollisionTiles(float delta){
     auto groundContact = [&](const Rect& tile) {
         if (incomingY > 0 || feetBefore < tile.getMaxY()-2) return;
         landed = true;
-        binContact = binContact || binTile(tile);
+
         carContact = carContact || (tile.getMinX() >= 4384 && tile.getMaxX() <= 4992 &&
             tile.getMinY() >= 1088 && tile.getMaxY() <= 1280);
     };
@@ -635,15 +642,35 @@ void GameScene::getCollisionTiles(float delta){
 	corners.clear();
 
 #if defined(__EMSCRIPTEN__)
-    if (binContact && !touchingTrashBin) hitTrashBin();
+    // A swept top-plane test handles gentle landings and tile-corner misses.
+    const float leftAfter = player->position.x + player->velocity.x +
+        (player->facingRight ? 0 : player->player_size.width*.25f);
+    const bool overBin = leftAfter < 5760 && leftAfter+player->player_size.width*.75f > 5600;
+    const bool crossedTop = overBin && incomingY <= 0 && feetBefore >= 1216 &&
+        feetBefore+incomingY <= 1216;
+    if (crossedTop) {
+        player->position.y = 1216;
+        player->velocity.y = 0;
+        player->grounded = true;
+        player->falling = false;
+        landed = true;
+    }
+    const bool onBinTop = overBin && incomingY <= 0 &&
+        std::abs(player->position.y-1216) <= 2;
+    if (binTopImpact.update(onBinTop,overBin,player->position.y)) hitTrashBin();
+    if (binContact && !touchingTrashBin && !onBinTop) hitTrashBin();
     if (carContact && !touchingCar) {
         carLightsOn = !carLightsOn;
         carLights->setVisible(carLightsOn);
+        CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("web-audio/car-alarm.wav",false,1,0,.65f);
     }
-    if (landed && incomingY < -5 && !binContact)
+    if (landed && incomingY < -5 && !onBinTop)
         CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("web-audio/land.wav",false,1,0,.5625f);
     touchingTrashBin = binContact;
-    touchingCar = carContact;
+    // Ignore one-frame holes in legacy support detection while walking on the car.
+    if (carContact) touchingCar = true;
+    else if (incomingY > 0 || leftAfter >= 4992 || leftAfter+player->player_size.width*.75f <= 4384)
+        touchingCar = false;
 #endif
 	// Sewer collision
 
