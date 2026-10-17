@@ -239,3 +239,6 @@ toggle plays `Resources/web-audio/car-alarm.wav`, an original synthesized short
 warbling chirp. Replace this file and rebuild to use a sourced recording.
 Build and contact-state regression test pass; live gameplay validation remains
 necessary for the final feel and appearance.
+
+Guitar timing adjustment: advance reduced from 200 ms to 50 ms before neon
+onset (3.95 seconds into the intro), following listening feedback.
