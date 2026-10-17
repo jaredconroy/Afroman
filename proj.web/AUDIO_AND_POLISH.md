@@ -43,9 +43,16 @@ and stops on SELECT LEVEL or EXIT. Browser audio is still unlocked by Play Afrom
 
 ## Gameplay
 
-- Level 2 results now offer FREE PLAY. The chart and score disappear; all seven
-  drum keys play with neutral key pulses and no timing penalties. Pause still
-  offers restart, select level, and exit. RESTART begins the scored song again.
+- Level 2 keeps its original three-button results menu. All seven drum keys
+  remain playable behind it without scoring or timing penalties until you choose
+  restart, select level, or exit. There is no separate free-play button or screen.
+  The score panel sits right of center so the drum labels and key squares remain
+  visible, and its full-screen dimming region is cropped away.
+- The controls intro shows a five-second PRACTICE countdown and fades it with
+  the controls. It follows the existing audio/chart clock, including calibration
+  and pause/resume; the initial scene transition is included in the intro lead-in.
+  Neither song playback nor note timing has shifted. The pause artwork and its
+  buttons move six pixels right to align the AFROMAN logo with the controls art.
 - On entering a ladder climb or sewer descent, the player's visual center snaps
   to the center of the connected horizontal trigger region. Single-tile ladders
   and seven-tile sewer entrances share their authored center; horizontal motion
@@ -70,8 +77,8 @@ frames, and expiry without going negative. Audio transport regression checks cov
 pause/resume and music/effect isolation. Browser listening and ladder feel remain
 subjective playtesting items.
 
-Safari checks: decoded all bundled audio and reached gameplay; rhythm results
-showed FREE PLAY, all seven drum keys accepted input without scoring, and pause
-remained available. The maze trail rendered with the marker blue and persisted
-along the travelled path. Ladder snapping, final-second pulse appearance, and
-subjective audio mix still need a human gameplay/listening pass.
+Safari regression check: the intro countdown stayed synchronized through pause
+and resume; pause/control AFROMAN logos aligned. The final score panel left all
+drum labels visible at full brightness, retained three original buttons with
+clear logo spacing, and accepted all seven drum keys without altering the final
+80/93 score during the check.

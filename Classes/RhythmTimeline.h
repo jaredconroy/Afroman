@@ -15,6 +15,10 @@ struct RhythmTimeline {
     double position(double musicSeconds, double offsetSeconds) const {
         return originX + pixelsPerSecond * (musicSeconds - offsetSeconds);
     }
+    double introRemaining(double musicSeconds, double offsetSeconds,
+                          double halfWidth, double mapWidth) const {
+        return (-halfWidth-mapWidth-originX)/pixelsPerSecond + offsetSeconds - musicSeconds;
+    }
     double noteTime(int column, double offsetSeconds) const {
         return (targetX - originX - (column + 0.5) * tileWidth) / pixelsPerSecond + offsetSeconds;
     }

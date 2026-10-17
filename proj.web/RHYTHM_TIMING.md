@@ -76,3 +76,8 @@ resume and restart remained functional. Final musical alignment was not certifie
 
 Safari check (2026-10-17): level 2 pause/SELECT LEVEL opened the three-button
 selection screen without replaying the title animation.
+
+The practice countdown follows chart-entry time and calibration; the visible
+five-second count includes the existing scene transition lead-in. Results retain
+the original three buttons and allow unscored drumming without dismissing the
+score panel. The results panel no longer dims the surrounding drum kit.

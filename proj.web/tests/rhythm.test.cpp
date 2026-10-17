@@ -12,6 +12,14 @@ int main() {
         for (int i=0;i<=fps*20;++i) last=timeline.position(double(i)/fps,0);
         assert(std::abs(last-timeline.position(20,0))<1e-8);
     }
+    // Countdown must reach zero exactly when the existing chart-entry fade triggers,
+    // including calibration, without changing any note's authored time.
+    for (double offset : {-0.5,0.0,0.5}) {
+        const double deadline = timeline.introRemaining(0,offset,525,12000);
+        assert(std::abs(timeline.position(deadline,offset)-(-525-12000))<1e-8);
+        assert(std::abs(timeline.introRemaining(deadline-3,offset,525,12000)-3)<1e-8);
+        assert(std::abs(timeline.noteTime(299,offset)-time-offset)<1e-8);
+    }
     std::vector<afroman::RhythmNote> lane{afroman::RhythmNote(299)};
     assert(!timeline.takeHit(lane,time-0.1,0));
     int matchedColumn = -1;
