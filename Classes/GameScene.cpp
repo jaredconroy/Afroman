@@ -789,6 +789,14 @@ void GameScene::onKeyReleased(EventKeyboard::KeyCode keyCode, Event* event)
 
 void GameScene::menuCloseCallback(Ref* pSender)
 {
+#if defined(__EMSCRIPTEN__)
+    auto audio = CocosDenshion::SimpleAudioEngine::getInstance();
+    audio->stopBackgroundMusic();
+    audio->stopAllEffects();
+    Director::getInstance()->replaceScene(TransitionFade::create(0.25f, StartScreen::createScene()));
+    return;
+#endif
+
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_WP8) || (CC_TARGET_PLATFORM == CC_PLATFORM_WINRT)
 	return;
 #endif

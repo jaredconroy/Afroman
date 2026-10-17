@@ -86,9 +86,7 @@ TIFF optional external compression integrations are not enabled in this prototyp
 Validate full level-one gameplay/collision/pause/restart, then remaining HUDs,
 audio playback/unlock/pause/resume, all three levels, and production packaging.
 Level 2's old Windows frame-dependent timing is not authoritative; recalibrate
-against the audio clock rather than preserving existing drift. Current browser
-exit buttons still follow legacy process-exit behavior and need a browser return
-flow before considering the game complete.
+against the audio clock rather than preserving existing drift. Browser EXIT now returns to the title without ending the browser main loop.
 
 ## Milestone 1 validation (2026-10-16)
 
@@ -110,3 +108,11 @@ and the Cocos scheduler/action/render loop, not Afroman gameplay or audio.
 
 These are smoke checks, not a full level playthrough. Audio decoding is verified;
 actual output/latency and rhythm synchronization are not yet verified.
+
+## EXIT and rhythm update (2026-10-17)
+
+Browser EXIT returns to a fresh title and stops audio. Level 2 positions and hit
+judgments now use the audio playback clock, with cached notes, one score per note,
+and a +/-90 ms hit window. The original nominal pace remains the default. A saved
+calibration offset below the canvas adjusts consistent latency; it cannot correct
+authoring drift within the song. See proj.web/RHYTHM_TIMING.md for details and tests.

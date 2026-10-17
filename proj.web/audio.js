@@ -2,7 +2,7 @@
 // synchronous interface never races an asynchronous browser decode.
 globalThis.AfromanAudio = {
   context: null, decoded: new Map(), active: new Map(), voices: new Map(), nextId: 1,
-  musicVolume: 1, effectsVolume: 1,
+  musicVolume: 1, effectsVolume: 1, syncOffsetMs: 0,
   async prepare() {
     if (!this.context) {
       this.context = new AudioContext({latencyHint: 'interactive'});
@@ -47,8 +47,14 @@ globalThis.AfromanAudio = {
     source.connect(gain); gain.connect(pan);
     pan.connect(voice.id === 0 ? this.musicGain : this.effectsGain);
     voice.source = source; voice.gainNode = gain; voice.panNode = pan;
-    voice.started = context.currentTime; voice.paused = false;
-    source.onended = () => { if (voice.source === source) this.stop(voice.id); };
+    voice.started = context.currentTime; voice.paused = false; voice.ended = false;
+    source.onended = () => {
+      if (voice.source !== source) return;
+      if (voice.id === 0 && !voice.loop) {
+        // Keep the transport clock through the chart's short trailing section.
+        this.detach(voice); voice.ended = true;
+      } else this.stop(voice.id);
+    };
     source.start(0, voice.offset);
   },
   play(path, loop, pitch, pan, gain, music) {
@@ -72,13 +78,34 @@ globalThis.AfromanAudio = {
   },
   resume(id) {
     const v = this.voices.get(id); if (!v || !v.paused) return;
-    if (v.offset >= v.buffer.duration) { this.stop(id); return; }
+    if (v.offset >= v.buffer.duration) {
+      if (id === 0 && !v.loop) { v.started = this.context.currentTime; v.paused = false; v.ended = true; }
+      else this.stop(id);
+      return;
+    }
     this.start(v);
   },
   stop(id) { const v = this.voices.get(id); if (v) { this.detach(v); this.voices.delete(id); } },
   effects(action) { for (const id of [...this.voices.keys()]) if (id !== 0) this[action](id); },
   rewind() { const v = this.voices.get(0); if (v) { this.detach(v); v.offset = 0; this.start(v); } },
-  playing() { const v = this.voices.get(0); return !!v && !v.paused && this.context.state === 'running'; },
+  // Prefer the audio device's presentation clock over the render-ahead clock.
+  outputTime() {
+    const c = this.context;
+    if (c.getOutputTimestamp) {
+      const stamp = c.getOutputTimestamp(), now = performance.now();
+      if (stamp.contextTime > 0 && stamp.performanceTime > 0 && now-stamp.performanceTime < 250)
+        return Math.max(0, Math.min(c.currentTime, stamp.contextTime+(now-stamp.performanceTime)/1000));
+    }
+    return Math.max(0, c.currentTime-(c.baseLatency||0)-(c.outputLatency||0));
+  },
+  musicPosition() {
+    const v = this.voices.get(0);
+    if (!v) return 0;
+    if (v.paused) return v.offset;
+    let position = v.offset + Math.max(0, this.outputTime()-v.started)*v.pitch;
+    return v.loop ? position % v.buffer.duration : position;
+  },
+  playing() { const v = this.voices.get(0); return !!v && !v.paused && !v.ended && this.context.state === 'running'; },
   volume(music, value) {
     value = Math.max(0, Math.min(1, value));
     this[music ? 'musicVolume' : 'effectsVolume'] = value;

@@ -2,6 +2,9 @@
 #include "StartScreen.h"
 #include "globals.h"
 #include "SimpleAudioEngine.h"
+#if defined(__EMSCRIPTEN__)
+#include "WebRhythm.h"
+#endif
 
 
 Scene* GameScene2::createScene()
@@ -98,14 +101,48 @@ bool GameScene2::init()
 	this->addChild(scoreLabel2, 10000);
 
 
-	CocosDenshion::SimpleAudioEngine::sharedEngine()->playBackgroundMusic("song.mp3", true); //starts playing the background music
+#if defined(__EMSCRIPTEN__)
+    rhythm.originX = level->getMap()->getPositionX();
+    rhythm.targetX = center.x - 60.0; // center of the on-screen key boxes
+    rhythm.tileWidth = level->getMap()->getTileSize().width;
+    const char* lanes[] = {"cymbal", "hihat", "snare", "tom1", "tom2", "tom3", "bass"};
+    for (int lane=0; lane<7; ++lane)
+        for (int column:level->getNotes(lanes[lane], (lane+1)*2))
+            rhythmNotes[lane].emplace_back(column);
+    CocosDenshion::SimpleAudioEngine::getInstance()->playBackgroundMusic("song.mp3", false);
+#else
+	CocosDenshion::SimpleAudioEngine::sharedEngine()->playBackgroundMusic("song.mp3", true);
+#endif //starts playing the background music
 
 	this->schedule(schedule_selector(GameScene2::updateScene)); //sets the method updateScene to run every second
 
 	return true;
 }
 
+#if defined(__EMSCRIPTEN__)
+void GameScene2::updateRhythm() {
+    if (paused) return;
+    const double seconds = afroman::musicTime();
+    const double offset = afroman::calibrationOffset();
+    level->getMap()->setPositionX(rhythm.position(seconds, offset));
+    // Re-evaluate at keydown, not from a potentially stale rendered frame.
+    if (!controlsDismissed && level->getMap()->getPositionX() >=
+        -center.x - level->getMap()->getContentSize().width) {
+        controls->stopAllActions();
+        controls->runAction(FadeOut::create(0.25f));
+        controlsDismissed = true;
+    }
+    scoreLabel1->setString("SCORE: " + to_string(score));
+    if (level->getMap()->getPositionX() >= center.x) youWinMenu();
+}
+#endif
+
 void GameScene2::updateScene(float delta){
+#if defined(__EMSCRIPTEN__)
+    updateRhythm();
+    return;
+#endif
+
 
 	//if the first note is entering the screen, fade the controls image out
 	if (level->getMap()->getPositionX() <= ((-center.x) - level->getMap()->getContentSize().width)){
@@ -249,6 +286,10 @@ void GameScene2::restart(Ref *psender){
 }
 
 void GameScene2::selectLevel(Ref *psender){
+#if defined(__EMSCRIPTEN__)
+    CocosDenshion::SimpleAudioEngine::getInstance()->stopBackgroundMusic();
+    CocosDenshion::SimpleAudioEngine::getInstance()->stopAllEffects();
+#endif
 
 	//replaces current scene with a new scene of the next level
 	auto newScene = StartScreen::createScene();
@@ -262,6 +303,23 @@ void GameScene2::onKeyPressed(EventKeyboard::KeyCode keyCode, Event* event)
 	//else if the controls menu is still visible, the sound plays
 	//else, the score goes down and an error sound is played
 
+#if defined(__EMSCRIPTEN__)
+    if (paused) return;
+    updateRhythm();
+    if (paused) return;
+    const EventKeyboard::KeyCode keys[] = {CYMBAL, HI_HAT, SNARE, TOM1, TOM2, TOM3, SPACEBAR};
+    const char* sounds[] = {"cymbal.wav", "hihat.wav", "snare.wav", "tom1.wav", "tom2.wav", "tom3.wav", "bass.wav"};
+    for (int lane=0; lane<7; ++lane) {
+        if (keyCode != keys[lane]) continue;
+        const bool hit = rhythm.takeHit(rhythmNotes[lane], afroman::musicTime(), afroman::calibrationOffset());
+        if (hit) { ++score; CocosDenshion::SimpleAudioEngine::getInstance()->playEffect(sounds[lane]); }
+        else if (controls->getOpacity()>0) CocosDenshion::SimpleAudioEngine::getInstance()->playEffect(sounds[lane]);
+        else { --score; CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("error.wav"); }
+        scoreLabel1->setString("SCORE: " + to_string(score));
+        return;
+    }
+    return;
+#endif
 	if (!paused){
 		if (keyCode == SPACEBAR){
 
@@ -370,6 +428,14 @@ void GameScene2::onKeyReleased(EventKeyboard::KeyCode keyCode, Event* event)
 
 void GameScene2::menuCloseCallback(Ref* pSender)
 {
+#if defined(__EMSCRIPTEN__)
+    auto audio = CocosDenshion::SimpleAudioEngine::getInstance();
+    audio->stopBackgroundMusic();
+    audio->stopAllEffects();
+    Director::getInstance()->replaceScene(TransitionFade::create(0.25f, StartScreen::createScene()));
+    return;
+#endif
+
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_WP8) || (CC_TARGET_PLATFORM == CC_PLATFORM_WINRT)
 	return;
 #endif

@@ -6,6 +6,11 @@
 <button id="play" disabled>Play Afroman</button>
 <p>Press Enter at the title, then click a level. Arrow keys move and jump. Level 2 drums: Space, F, J, R, T, Y, U.</p>
 <canvas id="canvas" width="1050" height="640" tabindex="0" aria-label="Afroman game" oncontextmenu="event.preventDefault()"></canvas>
+<details><summary>Level 2 timing adjustment</summary>
+<label for="sync-offset">Note timing: <output id="sync-value">0 ms</output></label>
+<input id="sync-offset" type="range" min="-1000" max="1000" step="10" value="0">
+<p>Positive values make notes arrive later; negative values make them arrive earlier. Use this for a consistent offset, not changing tempo. Your setting is saved in this browser.</p>
+</details>
 <details><summary>Diagnostics</summary><pre id="log"></pre></details>
 <script>
 const statusText=document.getElementById('status'), playButton=document.getElementById('play');
@@ -14,7 +19,13 @@ var Module={noInitialRun:true,canvas:document.getElementById('canvas'),
  print:function(s){console.log(s);appendLog(s);},
  printErr:function(s){console.error(s);appendLog('ERROR: '+s);},
  onAbort:function(s){statusText.textContent='Game failed to start: '+s;},
- onRuntimeInitialized:function(){playButton.disabled=false;statusText.textContent='Ready to play.';}
+ onRuntimeInitialized:function(){
+  playButton.disabled=false;statusText.textContent='Ready to play.';
+  let saved=0;try {saved=Number(localStorage.getItem('afroman-note-offset-ms'))||0;}catch(e){}
+  globalThis.AfromanAudio.syncOffsetMs=Math.max(-1000,Math.min(1000,saved));
+  document.getElementById('sync-offset').value=globalThis.AfromanAudio.syncOffsetMs;
+  document.getElementById('sync-value').textContent=globalThis.AfromanAudio.syncOffsetMs+' ms';
+ }
 };
 playButton.addEventListener('click',async()=>{
  playButton.disabled=true;statusText.textContent='Preparing sound…';
@@ -25,6 +36,19 @@ playButton.addEventListener('click',async()=>{
  } catch(error) {console.error(error);appendLog(String(error));statusText.textContent='Could not start: '+error.message;playButton.disabled=false;}
 });
 Module.canvas.addEventListener('pointerdown',()=>Module.canvas.focus());
+document.getElementById('sync-offset').addEventListener('input',event=>{
+ const value=Number(event.target.value);globalThis.AfromanAudio.syncOffsetMs=value;
+ document.getElementById('sync-value').textContent=value+' ms';
+ try {localStorage.setItem('afroman-note-offset-ms',String(value));}catch(e){}
+});
+document.addEventListener('visibilitychange',()=>{
+ const audio=globalThis.AfromanAudio;if(!audio || !audio.context)return;
+ if(document.hidden)audio.context.suspend();
+ else audio.context.resume().catch(error=>{statusText.textContent='Click the game to resume sound.';});
+});
+Module.canvas.addEventListener('pointerdown',()=>{
+ const audio=globalThis.AfromanAudio;if(audio && audio.context && audio.context.state!=='running')audio.context.resume();
+});
 </script>
 {{{ SCRIPT }}}
 </html>

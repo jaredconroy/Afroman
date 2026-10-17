@@ -7,6 +7,9 @@
 #include <algorithm>
 #include <string>
 #include <vector>
+#if defined(__EMSCRIPTEN__)
+#include "RhythmTimeline.h"
+#endif
 
 using namespace std;
 USING_NS_CC;
@@ -48,6 +51,13 @@ public:
 	bool tom3 = false;
 	bool bass = false;
 	bool paused = false;
+
+#if defined(__EMSCRIPTEN__)
+    afroman::RhythmTimeline rhythm;
+    bool controlsDismissed = false;
+    std::vector<afroman::RhythmNote> rhythmNotes[7];
+    void updateRhythm();
+#endif
 
 	//methods
 
