@@ -277,3 +277,13 @@ commit 0f3112f, the version reported to have correct contact triggering before
 the narrower-edge request. This restores the earlier wider support behavior
 as requested. Current solid headlights and horn playback remain. Horn pitch
 returns to 440/554 Hz with a fuller harmonic blend and a shaped honk attack.
+
+## Crowd, practice pause layering, and ladder melodies
+
+Intro crowd gain is 0.52 (previously 0.45). Level 2 pause background/menu use
+local z-orders 10001/10002, above the practice countdown at 10000.
+Level 1 plays a short ascending chiptune phrase when a climb starts and a
+descending phrase when a sewer descent starts; holding a key does not retrigger
+the phrase throughout the traversal. Original synthesized placeholders are
+`Resources/web-audio/ladder-up.wav` and `ladder-down.wav`; replace either file
+and rebuild to supply your own audio. `generate_ladder_audio.py` restores both.

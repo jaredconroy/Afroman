@@ -306,6 +306,7 @@ void GameScene::updatePlayer(float delta){
 		if (ladder){ //if the player is standing on a ladder, have him climb if up is pressed
 #if defined(__EMSCRIPTEN__)
             if (!player->climbing) {
+                CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("web-audio/ladder-up.wav",false,1,0,.65f);
                 player->position.x = ladderCenterX - player->player_size.width * 0.5f;
                 player_sprite->setPosition(player->position);
             }
@@ -350,6 +351,7 @@ void GameScene::updatePlayer(float delta){
 		if (sewer){ //if the player is standing on a sewer, have him climb down
 			if (!player->falling){
 #if defined(__EMSCRIPTEN__)
+                CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("web-audio/ladder-down.wav",false,1,0,.65f);
                 player->position.x = sewerCenterX - player->player_size.width * 0.5f;
                 player_sprite->setPosition(player->position);
 #endif

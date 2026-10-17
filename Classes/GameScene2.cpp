@@ -89,7 +89,7 @@ bool GameScene2::init()
 	//this is an image that serves as the background of the pause menu
 	pauseMenubg = Sprite::create("pauseMenubg.png");
 	pauseMenubg->setOpacity(0); //sets the opacity to 0 so that it will fade in from 0
-	this->addChild(pauseMenubg, 10000);
+	this->addChild(pauseMenubg, 10001);
 
 	//this is an image that serves as the background of the "you win" menu
 #if defined(__EMSCRIPTEN__)
@@ -349,7 +349,7 @@ void GameScene2::pauseMenu(Ref *psender){
             + Vec2(6,0)
 #endif
         );
-		this->addChild(pauseMenu2, 10000);
+		this->addChild(pauseMenu2, 10002);
 
 		//fades in the background of the pause menu
 		FadeIn *fadeIn = FadeIn::create(.25);
@@ -403,7 +403,7 @@ void GameScene2::youWinMenu(){
 #endif
         );
 		pauseMenu2->setGlobalZOrder(10000);
-		this->addChild(pauseMenu2, 10000);
+		this->addChild(pauseMenu2, 10002);
 
 		FadeIn *fadeIn = FadeIn::create(.5);
 		youWinMenubg->runAction(fadeIn);

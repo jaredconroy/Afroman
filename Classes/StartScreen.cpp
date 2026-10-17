@@ -107,7 +107,7 @@ bool StartScreen::init()
                         titleEffects.push_back(CocosDenshion::SimpleAudioEngine::getInstance()->playEffect(
                             "web-audio/spotlight.wav",false,1.0f,0,0.8f));
                 }),nullptr));
-                titleEffects.push_back(audio->playEffect("web-audio/crowd.wav",false,1,0,0.45f));
+                titleEffects.push_back(audio->playEffect("web-audio/crowd.wav",false,1,0,0.52f));
                 neonBuzz = audio->playEffect("web-audio/neon-buzz.wav",true);
                 titleEffects.push_back(neonBuzz);
             }
