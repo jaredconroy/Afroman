@@ -34,6 +34,17 @@ hide that problem with one laptop-specific song delay. Listening/playtesting is
 still needed to choose a final authored baseline. Audio output latency estimation
 does not eliminate keyboard, display or Bluetooth latency on every device.
 
+## Visual feedback
+
+Each drum press pulses its letter square and flashes a 50×50 border matching the
+white key frame: neon green for a scored hit, bright red for an off-time press,
+and neutral white during the controls intro. A matched note briefly becomes fully
+opaque, then fades back to its original translucent appearance, with the same
+colored border. Off-time presses also flash a nearby unhit note within 300 ms;
+more distant notes are left alone. Effects expire in about 300 ms and repeated
+presses replace the previous key flash. Feedback reads the existing judgment;
+the +/-90 ms hit window, scoring, audio clock, and calibration are unchanged.
+
 ## EXIT
 
 All browser EXIT callbacks stop music/effects and replace the scene with a fresh

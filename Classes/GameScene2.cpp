@@ -120,6 +120,80 @@ bool GameScene2::init()
 }
 
 #if defined(__EMSCRIPTEN__)
+namespace {
+// Rectangles use LayerColor, whose opacity actions work in Cocos 3.2.
+// DrawNode stores alpha in its vertex colors and does not inherit a FadeOut.
+void addFeedbackRing(Node* parent, float side, float thickness, const Color4B& color, int z) {
+    const float half = side * 0.5f;
+    const Rect edges[] = {
+        Rect(-half, -half, side, thickness),
+        Rect(-half, half-thickness, side, thickness),
+        Rect(-half, -half+thickness, thickness, side-2*thickness),
+        Rect(half-thickness, -half+thickness, thickness, side-2*thickness)
+    };
+    for (const auto& edge:edges) {
+        auto strip = LayerColor::create(color, edge.size.width, edge.size.height);
+        strip->setPosition(edge.origin);
+        parent->addChild(strip, z);
+    }
+}
+void addFeedbackBorder(Node* parent, const Color4B& color) {
+    addFeedbackRing(parent, 54, 4, Color4B(color.r,color.g,color.b,65), 1);
+    addFeedbackRing(parent, 50, 2.5f, color, 2);
+}
+}
+
+void GameScene2::showRhythmFeedback(int lane, bool hit, bool practice, int column) {
+    const Color4B color = practice ? Color4B(235,245,255,255) :
+        (hit ? Color4B(40,255,105,255) : Color4B(255,40,65,255));
+    const int feedbackTag = 71000 + lane;
+    if (auto previous = this->getChildByTag(feedbackTag)) previous->removeFromParent();
+    auto receptor = Node::create();
+    receptor->setCascadeOpacityEnabled(true);
+    // level2bg.png's white squares occupy x=966..1015, y=75+80*lane..124+80*lane.
+    // Transform the image coordinates into the same world space as the chart.
+    const Vec2 imageOrigin = bg_sprite->getPosition() - Vec2(525,320);
+    receptor->setPosition(imageOrigin + Vec2(991,540-80*lane));
+    this->addChild(receptor, 100, feedbackTag);
+
+    auto key = Sprite::create("level2bg.png", Rect(966,75+80*lane,50,50));
+    key->setBlendFunc(BlendFunc::ADDITIVE); // black pixels must not obscure the flashing note
+    key->setOpacity(175);
+    receptor->addChild(key, 0);
+    key->runAction(Sequence::create(
+        EaseOut::create(ScaleTo::create(0.045f,1.12f),2.0f),
+        EaseIn::create(ScaleTo::create(0.14f,1.0f),2.0f), nullptr));
+    addFeedbackBorder(receptor, color);
+    receptor->runAction(Sequence::create(DelayTime::create(0.055f),FadeOut::create(0.25f),RemoveSelf::create(),nullptr));
+
+    if (column < 0 || practice) return;
+    const char* lanes[] = {"cymbal","hihat","snare","tom1","tom2","tom3","bass"};
+    auto layer = level->getMap()->getLayer(lanes[lane]);
+    auto tile = layer->getTileAt(Vec2(column,(lane+1)*2));
+    if (!tile) return;
+    const std::string name = "note-feedback-" + to_string(lane) + "-" + to_string(column);
+    if (auto previous = level->getMap()->getChildByName(name)) previous->removeFromParent();
+    auto note = Node::create();
+    note->setCascadeOpacityEnabled(true);
+    note->setPosition(layer->getPosition()+tile->getPosition()+Vec2(20,20));
+    level->getMap()->addChild(note,100,name);
+
+    // The tileset has alpha 166/255. An opaque RGB overlay flashes to full color
+    // without modifying its shared texture or the timing/scoring state.
+    const Color4B palette[] = {
+        Color4B(255,222,22,255), Color4B(32,64,154,255), Color4B(237,28,36,255),
+        Color4B(20,167,81,255), Color4B(104,42,122,255), Color4B(241,96,37,255),
+        Color4B(37,170,225,255)
+    };
+    auto fill = LayerColor::create(palette[lane],40,40);
+    fill->setPosition(-20,-20);
+    note->addChild(fill);
+    addFeedbackBorder(note,color);
+    note->setOpacity(0);
+    note->runAction(Sequence::create(FadeIn::create(0.025f),DelayTime::create(0.04f),
+        FadeOut::create(0.23f),RemoveSelf::create(),nullptr));
+}
+
 void GameScene2::updateRhythm() {
     if (paused) return;
     const double seconds = afroman::musicTime();
@@ -311,9 +385,22 @@ void GameScene2::onKeyPressed(EventKeyboard::KeyCode keyCode, Event* event)
     const char* sounds[] = {"cymbal.wav", "hihat.wav", "snare.wav", "tom1.wav", "tom2.wav", "tom3.wav", "bass.wav"};
     for (int lane=0; lane<7; ++lane) {
         if (keyCode != keys[lane]) continue;
-        const bool hit = rhythm.takeHit(rhythmNotes[lane], afroman::musicTime(), afroman::calibrationOffset());
+        const double seconds = afroman::musicTime(), offset = afroman::calibrationOffset();
+        int column = -1;
+        const bool hit = rhythm.takeHit(rhythmNotes[lane], seconds, offset, &column);
+        const bool practice = !hit && controls->getOpacity()>0;
+        if (!hit && !practice) {
+            // Only flash an off-time note when it is actually near this press.
+            // A distant note must not appear to have been judged early/late.
+            double nearest = 0.30;
+            for (const auto& note:rhythmNotes[lane]) {
+                const double distance = std::abs(seconds-rhythm.noteTime(note.column,offset));
+                if (!note.hit && distance < nearest) { nearest=distance; column=note.column; }
+            }
+        }
+        showRhythmFeedback(lane,hit,practice,column);
         if (hit) { ++score; CocosDenshion::SimpleAudioEngine::getInstance()->playEffect(sounds[lane]); }
-        else if (controls->getOpacity()>0) CocosDenshion::SimpleAudioEngine::getInstance()->playEffect(sounds[lane]);
+        else if (practice) CocosDenshion::SimpleAudioEngine::getInstance()->playEffect(sounds[lane]);
         else { --score; CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("error.wav"); }
         scoreLabel1->setString("SCORE: " + to_string(score));
         return;

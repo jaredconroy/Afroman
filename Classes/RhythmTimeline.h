@@ -18,7 +18,8 @@ struct RhythmTimeline {
     double noteTime(int column, double offsetSeconds) const {
         return (targetX - originX - (column + 0.5) * tileWidth) / pixelsPerSecond + offsetSeconds;
     }
-    bool takeHit(std::vector<RhythmNote>& notes, double musicSeconds, double offsetSeconds) const {
+    bool takeHit(std::vector<RhythmNote>& notes, double musicSeconds, double offsetSeconds, int* hitColumn = nullptr) const {
+        if (hitColumn) *hitColumn = -1;
         RhythmNote* best = nullptr;
         double nearest = hitWindowSeconds + 1e-9;
         for (auto& note : notes) {
@@ -27,6 +28,7 @@ struct RhythmTimeline {
         }
         if (!best) return false;
         best->hit = true;
+        if (hitColumn) *hitColumn = best->column;
         return true;
     }
 };

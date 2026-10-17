@@ -14,8 +14,11 @@ int main() {
     }
     std::vector<afroman::RhythmNote> lane{afroman::RhythmNote(299)};
     assert(!timeline.takeHit(lane,time-0.1,0));
-    assert(timeline.takeHit(lane,time+0.08,0));
-    assert(!timeline.takeHit(lane,time+0.08,0)); // one score per note
+    int matchedColumn = -1;
+    assert(timeline.takeHit(lane,time+0.08,0,&matchedColumn));
+    assert(matchedColumn == 299); // visual feedback must identify the scored note
+    assert(!timeline.takeHit(lane,time+0.08,0,&matchedColumn));
+    assert(matchedColumn == -1); // one score per note
     std::vector<afroman::RhythmNote> otherLane{afroman::RhythmNote(299)};
     assert(timeline.takeHit(otherLane,time,0)); // simultaneous drums are independent
     std::vector<afroman::RhythmNote> delayedFrame{afroman::RhythmNote(299)};

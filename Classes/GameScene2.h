@@ -57,6 +57,7 @@ public:
     bool controlsDismissed = false;
     std::vector<afroman::RhythmNote> rhythmNotes[7];
     void updateRhythm();
+    void showRhythmFeedback(int lane, bool hit, bool practice, int column);
 #endif
 
 	//methods
