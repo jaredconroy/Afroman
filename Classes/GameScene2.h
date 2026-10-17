@@ -55,6 +55,8 @@ public:
 #if defined(__EMSCRIPTEN__)
     afroman::RhythmTimeline rhythm;
     bool controlsDismissed = false;
+    bool freePlay = false;
+    void startFreePlay(Ref* sender);
     std::vector<afroman::RhythmNote> rhythmNotes[7];
     void updateRhythm();
     void showRhythmFeedback(int lane, bool hit, bool practice, int column);

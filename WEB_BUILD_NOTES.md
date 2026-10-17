@@ -116,3 +116,5 @@ judgments now use the audio playback clock, with cached notes, one score per not
 and a +/-90 ms hit window. The original nominal pace remains the default. A saved
 calibration offset below the canvas adjusts consistent latency; it cannot correct
 authoring drift within the song. See proj.web/RHYTHM_TIMING.md for details and tests.
+
+Gameplay polish, free play, timer warnings, and replaceable audio: see [proj.web/AUDIO_AND_POLISH.md](proj.web/AUDIO_AND_POLISH.md).

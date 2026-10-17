@@ -206,7 +206,7 @@ void GameScene2::showRhythmFeedback(int lane, bool hit, bool practice, int colum
 }
 
 void GameScene2::updateRhythm() {
-    if (paused) return;
+    if (paused || freePlay) return;
     const double seconds = afroman::musicTime();
     const double offset = afroman::calibrationOffset();
     level->getMap()->setPositionX(rhythm.position(seconds, offset));
@@ -324,14 +324,27 @@ void GameScene2::youWinMenu(){
 
 		Vector <MenuItem*> menuItems;
 
-		MenuItem* restartButton = MenuItemImage::create("restartButton.png", "restartButton.png", this, menu_selector(GameScene2::restart));
-		restartButton->setPosition(ccp(0, 55));
+		#if defined(__EMSCRIPTEN__)
+        auto freeSprite = Sprite::create();
+        freeSprite->setContentSize(Size(320,64));
+        auto fill = LayerColor::create(Color4B(255,222,22,255),320,64);
+        freeSprite->addChild(fill);
+        auto label = LabelTTF::create("FREE PLAY", "8-Bit Madness", 40);
+        label->setColor(Color3B::BLACK);
+        label->setPosition(160,32);
+        freeSprite->addChild(label);
+        auto freeButton = MenuItemSprite::create(freeSprite, nullptr, this, menu_selector(GameScene2::startFreePlay));
+        freeButton->setPosition(0,65);
+        menuItems.pushBack(freeButton);
+#endif
+        MenuItem* restartButton = MenuItemImage::create("restartButton.png", "restartButton.png", this, menu_selector(GameScene2::restart));
+		restartButton->setPosition(ccp(0, -25));
 		menuItems.pushBack(restartButton);
 		MenuItem* nextButton = MenuItemImage::create("nextButton.png", "nextButton.png", this, menu_selector(GameScene2::selectLevel));
-		nextButton->setPosition(ccp(0, -45));
+		nextButton->setPosition(ccp(0, -115));
 		menuItems.pushBack(nextButton);
 		MenuItem* exitButton = MenuItemImage::create("exitButton.png", "exitButton.png", this, menu_selector(GameScene2::menuCloseCallback));
-		exitButton->setPosition(ccp(0, -145));
+		exitButton->setPosition(ccp(0, -205));
 		menuItems.pushBack(exitButton);
 
 		int totalNotes = level->getNotes("hihat", 4).size() + level->getNotes("cymbal", 2).size() + level->getNotes("snare", 6).size()
@@ -359,6 +372,22 @@ void GameScene2::youWinMenu(){
 	}
 }
 
+#if defined(__EMSCRIPTEN__)
+void GameScene2::startFreePlay(Ref*) {
+    CocosDenshion::SimpleAudioEngine::getInstance()->stopBackgroundMusic();
+    pauseMenu2->removeFromParent();
+    scoreLabel2->setVisible(false);
+    youWinMenubg->stopAllActions();
+    youWinMenubg->setOpacity(0);
+    controls->stopAllActions();
+    controls->setOpacity(0);
+    level->getMap()->setVisible(false);
+    scoreLabel1->setString("FREE PLAY");
+    freePlay = true;
+    paused = false;
+}
+#endif
+
 void GameScene2::resumeGame(Ref *psender){
 
 	pauseMenu2->removeFromParent(); //remove the menu when the game is not pause anymore
@@ -369,6 +398,9 @@ void GameScene2::resumeGame(Ref *psender){
 
 	paused = false; //unpause the game
 
+#if defined(__EMSCRIPTEN__)
+    if (!freePlay)
+#endif
 	CocosDenshion::SimpleAudioEngine::sharedEngine()->resumeBackgroundMusic(); //resume the background music
 }
 
@@ -405,6 +437,11 @@ void GameScene2::onKeyPressed(EventKeyboard::KeyCode keyCode, Event* event)
     const char* sounds[] = {"cymbal.wav", "hihat.wav", "snare.wav", "tom1.wav", "tom2.wav", "tom3.wav", "bass.wav"};
     for (int lane=0; lane<7; ++lane) {
         if (keyCode != keys[lane]) continue;
+        if (freePlay) {
+            showRhythmFeedback(lane,false,true,-1);
+            CocosDenshion::SimpleAudioEngine::getInstance()->playEffect(sounds[lane]);
+            return;
+        }
         const double seconds = afroman::musicTime(), offset = afroman::calibrationOffset();
         int column = -1;
         const bool hit = rhythm.takeHit(rhythmNotes[lane], seconds, offset, &column);

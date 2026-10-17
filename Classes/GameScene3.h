@@ -4,6 +4,7 @@
 #include "cocos2d.h"
 #include "Level.h"
 #include "Player.h"
+#include "GameCountdown.h"
 #include <algorithm>
 #include <string>
 #include <vector>
@@ -42,6 +43,9 @@ public:
 	float PLAYER_MAX_VELOCITY = 3.0f;
 	int time = 25;
 	int timeBySecond = 60;
+    afroman::GameCountdown countdown;
+    DrawNode* trail = nullptr;
+
 	int minutes;
 	int seconds;
 	LabelTTF* timeLabel;

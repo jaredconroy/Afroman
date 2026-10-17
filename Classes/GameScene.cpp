@@ -4,6 +4,22 @@
 #include "SimpleAudioEngine.h"
 
 
+#if defined(__EMSCRIPTEN__)
+namespace {
+float triggerCenter(Level* level, const char* name, const Rect& tile) {
+    auto map = level->getMap();
+    auto layer = map->getLayer(name);
+    const float width = map->getTileSize().width * SCALE_FACTOR;
+    const float height = map->getTileSize().height * SCALE_FACTOR;
+    int left = static_cast<int>(tile.getMidX() / width), right = left;
+    int row = static_cast<int>(map->getMapSize().height) - 1 - static_cast<int>(tile.getMidY() / height);
+    while (left > 0 && layer->getTileGIDAt(Vec2(left-1,row))) --left;
+    while (right+1 < map->getMapSize().width && layer->getTileGIDAt(Vec2(right+1,row))) ++right;
+    return (left+right+1) * width * 0.5f;
+}
+}
+#endif
+
 Scene* GameScene::createScene()
 {
 	auto scene = Scene::create();
@@ -72,6 +88,16 @@ bool GameScene::init()
 	player->position = player_sprite->getPosition();
 	player->player_size.width = player_sprite->getBoundingBox().size.width;
 	player->player_size.height = player_sprite->getBoundingBox().size.height;
+#if defined(__EMSCRIPTEN__)
+    // Find the left wall on the spawn row without materializing the whole TMX layer.
+    auto walls = level->getMap()->getLayer("walls");
+    const float tileWidth = level->getMap()->getTileSize().width * SCALE_FACTOR;
+    const float tileHeight = level->getMap()->getTileSize().height * SCALE_FACTOR;
+    const int row = static_cast<int>(level->getMap()->getMapSize().height) - 1 -
+        static_cast<int>(player->position.y / tileHeight);
+    for (int x = 0; (x+1)*tileWidth <= player->position.x; ++x)
+        if (walls->getTileGIDAt(Vec2(x,row))) flushBoundaryX = (x+1)*tileWidth;
+#endif
 
 	//creates a camera target and sets its position
 	cameraTarget = Sprite::create();
@@ -140,6 +166,10 @@ bool GameScene::init()
 
 	this->schedule(schedule_selector(GameScene::updateScene)); //sets updateScene to run every second
 
+#if defined(__EMSCRIPTEN__)
+    CocosDenshion::SimpleAudioEngine::getInstance()->setBackgroundMusicVolume(1.0f);
+    CocosDenshion::SimpleAudioEngine::getInstance()->playBackgroundMusic("web-audio/level1.wav", true);
+#endif
 	return true;
 }
 
@@ -184,12 +214,19 @@ void GameScene::updateScene(float delta){
 
 	if (!paused){ //only update if the game is not paused
 		
+#if defined(__EMSCRIPTEN__)
+        countdown.advance(time, delta);
+        timeLabel->setColor(time <= 10 ? Color3B(255,35,55) : Color3B::WHITE);
+        timeLabel->setScale(countdown.scale(time));
+#else
 		timeBySecond--; //decrease the time by 1 every second
 		//if time by second gets to 0, reset it to 60 for the next minute;
 		if (timeBySecond == 0){
 			time--;
 			timeBySecond = 60;
 		}
+
+#endif
 
 		//converts number to minutes:seconds format and updates the time label to the new time
 		minutes = time / 60;
@@ -225,12 +262,21 @@ void GameScene::updatePlayer(float delta){
 	if (std::find(heldKeys.begin(), heldKeys.end(), UP_ARROW) != heldKeys.end()) {
 
 		if (ladder){ //if the player is standing on a ladder, have him climb if up is pressed
+#if defined(__EMSCRIPTEN__)
+            if (!player->climbing) {
+                player->position.x = ladderCenterX - player->player_size.width * 0.5f;
+                player_sprite->setPosition(player->position);
+            }
+#endif
 			player->state = Player::State::Climbing;
 			player->grounded = false;
 			player->climbing = true;
 		}
 		else if (player->grounded){ //if the player is grounded, make him jump
 
+#if defined(__EMSCRIPTEN__)
+            CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("web-audio/jump.wav");
+#endif
 			player->velocity.y = PLAYER_JUMP_VELOCITY;
 			player->state = Player::State::Jumping;
 			player->grounded = false;
@@ -261,6 +307,10 @@ void GameScene::updatePlayer(float delta){
 
 		if (sewer){ //if the player is standing on a sewer, have him climb down
 			if (!player->falling){
+#if defined(__EMSCRIPTEN__)
+                player->position.x = sewerCenterX - player->player_size.width * 0.5f;
+                player_sprite->setPosition(player->position);
+#endif
 				player->falling = true;
 				player->grounded = false;
 				player->state = Player::State::Climbing;
@@ -276,7 +326,14 @@ void GameScene::updatePlayer(float delta){
 		player_sprite->setFlippedX(false);
 	}
 
+#if defined(__EMSCRIPTEN__)
+    const float fallingSpeed = player->velocity.y;
+#endif
 	this->getCollisionTiles(delta); //gets the collidable tiles
+#if defined(__EMSCRIPTEN__)
+    if (fallingSpeed < -5 && player->velocity.y == 0)
+        CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("web-audio/land.wav");
+#endif
 
 	if (slow){
 		PLAYER_MAX_VELOCITY = 5.0f;
@@ -430,6 +487,9 @@ void GameScene::getCollisionTiles(float delta){
 		CocosDenshion::SimpleAudioEngine::sharedEngine()->playEffect("powerUp.wav");
 	}
 
+#if defined(__EMSCRIPTEN__)
+    bool flushContact = false;
+#endif
 	// Wall collision
 
 	tiles = level->getTiles(tmp, -1, 0, "walls");
@@ -437,6 +497,10 @@ void GameScene::getCollisionTiles(float delta){
 	//for each tile, if the player walks into the tile, set the velocity to 0
 	for (Rect tile : tiles) {
 		if (player_rect.intersectsRect(tile)) {
+#if defined(__EMSCRIPTEN__)
+            flushContact = !player->facingRight && player->velocity.x < 0 &&
+                tile.getMaxX() <= flushBoundaryX + 0.1f && cameraTarget->getPositionY() == 1280;
+#endif
 			player->velocity.x = 0;
 			if (player->facingRight){
 				player->position.x = tile.getMinX() - (3 * player->player_size.width / 4) - 2;
@@ -450,6 +514,11 @@ void GameScene::getCollisionTiles(float delta){
 
 	tiles.clear();
 
+#if defined(__EMSCRIPTEN__)
+    if (flushContact && !touchingFlushWall)
+        CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("web-audio/flush.wav");
+    touchingFlushWall = flushContact;
+#endif
 	// Ground collision
 
 	tiles = level->getTiles(tmp, -1, -1, "walls");
@@ -532,6 +601,9 @@ void GameScene::getCollisionTiles(float delta){
 		player->grounded = false;
 		if (tile.intersectsRect(player_rect)) {
 			sewer = true;
+#if defined(__EMSCRIPTEN__)
+            sewerCenterX = triggerCenter(level, "sewer", tile);
+#endif
 			if (!player->falling){
 				player->position.y = tile.getMaxY();
 				player->grounded = true;
@@ -546,6 +618,9 @@ void GameScene::getCollisionTiles(float delta){
 		player->grounded = false;
 		if (tile.intersectsRect(player_rect)) {
 			sewer = true;
+#if defined(__EMSCRIPTEN__)
+            sewerCenterX = triggerCenter(level, "sewer", tile);
+#endif
 			if (!player->falling){
 				player->position.y = tile.getMaxY();
 				player->grounded = true;
@@ -642,6 +717,9 @@ void GameScene::getCollisionTiles(float delta){
 	for (Rect tile : tiles) {
 		if (tile.intersectsRect(player_rect)) {
 			ladder = true;
+#if defined(__EMSCRIPTEN__)
+            ladderCenterX = triggerCenter(level, "ladder", tile);
+#endif
 			break;
 		}
 	}
@@ -649,6 +727,9 @@ void GameScene::getCollisionTiles(float delta){
 	for (Rect tile : corners) {
 		if (tile.intersectsRect(player_rect)) {
 			ladder = true;
+#if defined(__EMSCRIPTEN__)
+            ladderCenterX = triggerCenter(level, "ladder", tile);
+#endif
 			break;
 		}
 	}
@@ -662,6 +743,10 @@ void GameScene::pauseMenu(Ref *psender){
 	//don't pause if the game is already paused
 	if (!paused){
 		paused = true; //pause the game
+#if defined(__EMSCRIPTEN__)
+        CocosDenshion::SimpleAudioEngine::getInstance()->pauseBackgroundMusic();
+#endif
+
 
 		//create each menu item, set their positions, and add them to an array
 		Vector <MenuItem*> menuItems;
@@ -696,6 +781,11 @@ void GameScene::gameOverMenu(){
 	//don't pause if the game is already paused
 	if (!paused){
 		paused = true; //pause the game
+#if defined(__EMSCRIPTEN__)
+        CocosDenshion::SimpleAudioEngine::getInstance()->pauseBackgroundMusic();
+        CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("web-audio/lose.wav");
+#endif
+
 
 		//create each menu item, set their positions, and add them to an array
 		Vector <MenuItem*> menuItems;
@@ -727,6 +817,11 @@ void GameScene::youWinMenu(){
 	//don't pause if the game is already paused
 	if (!paused){
 		paused = true; //pause the game
+#if defined(__EMSCRIPTEN__)
+        CocosDenshion::SimpleAudioEngine::getInstance()->pauseBackgroundMusic();
+        CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("web-audio/win.wav");
+#endif
+
 
 		//create each menu item, set their positions, and add them to an array
 		Vector <MenuItem*> menuItems;
@@ -759,6 +854,9 @@ void GameScene::resumeGame(Ref *psender){
 	FadeOut *fadeOut = FadeOut::create(.25);
 	pauseMenubg->runAction(fadeOut);
 	paused = false;
+#if defined(__EMSCRIPTEN__)
+    CocosDenshion::SimpleAudioEngine::getInstance()->resumeBackgroundMusic();
+#endif
 }
 
 void GameScene::restart(Ref *psender){
@@ -771,6 +869,10 @@ void GameScene::restart(Ref *psender){
 void GameScene::selectLevel(Ref *psender){
 	
 	//replaces current scene with a new scene of the next level
+#if defined(__EMSCRIPTEN__)
+    CocosDenshion::SimpleAudioEngine::getInstance()->stopBackgroundMusic();
+    CocosDenshion::SimpleAudioEngine::getInstance()->stopAllEffects();
+#endif
 	auto newScene = StartScreen::createScene(true);
 	Director::getInstance()->replaceScene(TransitionFade::create(1.0f, newScene));
 }

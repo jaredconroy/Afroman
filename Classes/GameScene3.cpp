@@ -51,6 +51,10 @@ bool GameScene3::init()
 	player->position = player_sprite->getPosition();
 	player->player_size = player_sprite->getBoundingBox().size;
 	this->addChild(player_sprite, 100);
+#if defined(__EMSCRIPTEN__)
+    trail = DrawNode::create();
+    this->addChild(trail, 90);
+#endif
 	
 	//creates a player target
 	cameraTarget = Sprite::create();
@@ -100,6 +104,10 @@ bool GameScene3::init()
 
 	tiles = level->getWalls("walls"); //creates an array of tiles from the tilemap
 
+#if defined(__EMSCRIPTEN__)
+    CocosDenshion::SimpleAudioEngine::getInstance()->setBackgroundMusicVolume(1.0f);
+    CocosDenshion::SimpleAudioEngine::getInstance()->playBackgroundMusic("web-audio/level3.wav", true);
+#endif
 	return true;
 }
 
@@ -107,6 +115,11 @@ void GameScene3::updateScene(float delta){
 
 	//updates the scene as long as the game is not paused
 	if (!paused){
+#if defined(__EMSCRIPTEN__)
+        countdown.advance(time, delta);
+        timeLabel->setColor(time <= 10 ? Color3B(255,35,55) : Color3B::WHITE);
+        timeLabel->setScale(countdown.scale(time));
+#else
 		timeBySecond--; //subtract one from the time
 		
 		//resets the seconds count to 60 if the minute changes
@@ -114,6 +127,8 @@ void GameScene3::updateScene(float delta){
 			time--;
 			timeBySecond = 60;
 		}
+
+#endif
 
 		//calculates minutes:seconds from one number of seconds
 		minutes = time / 60;
@@ -136,7 +151,7 @@ void GameScene3::updateScene(float delta){
 			}
 		}
 		
-		this->updatePlayer(delta);
+		if (!paused) this->updatePlayer(delta);
 	}
 	//if time runs out before you get to the destination, go to game over
 	if (time == 0){
@@ -173,7 +188,14 @@ void GameScene3::updatePlayer(float delta){
 	}
 
 	//change the position of the player by the velocity
+#if defined(__EMSCRIPTEN__)
+    const Vec2 previous = player->position;
+#endif
 	player->position = player->position + Point(player->velocity.x, player->velocity.y);
+#if defined(__EMSCRIPTEN__)
+    if (previous.distanceSquared(player->position) > 0)
+        trail->drawSegment(previous, player->position, 3.5f, Color4F(15/255.f,117/255.f,188/255.f,0.8f));
+#endif
 	player_sprite->setPosition(player->position); //set the player sprite to have the same position as the player
 
 	//reset the velocity to zero for the next time the function is called
@@ -185,6 +207,10 @@ void GameScene3::pauseMenu(Ref *psender){
 	//don't pause if the game is already paused
 	if (!paused){
 		paused = true; //pause the game
+#if defined(__EMSCRIPTEN__)
+        CocosDenshion::SimpleAudioEngine::getInstance()->pauseBackgroundMusic();
+#endif
+
 
 		//create each menu item, set their positions, and add them to an array
 		Vector <MenuItem*> menuItems;
@@ -219,6 +245,11 @@ void GameScene3::gameOverMenu(){
 	//don't pause if the game is already paused
 	if (!paused){
 		paused = true;
+#if defined(__EMSCRIPTEN__)
+        CocosDenshion::SimpleAudioEngine::getInstance()->pauseBackgroundMusic();
+        CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("web-audio/lose.wav");
+#endif
+
 
 		//create each menu item, set their positions, and add them to an array
 		Vector <MenuItem*> menuItems;
@@ -250,6 +281,11 @@ void GameScene3::youWinMenu(){
 	//don't pause if the game is already paused
 	if (!paused){
 		paused = true;
+#if defined(__EMSCRIPTEN__)
+        CocosDenshion::SimpleAudioEngine::getInstance()->pauseBackgroundMusic();
+        CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("web-audio/win.wav");
+#endif
+
 
 		//create each menu item, set their positions, and add them to an array
 		Vector <MenuItem*> menuItems;
@@ -284,7 +320,10 @@ void GameScene3::resumeGame(Ref *psender){
 	FadeOut *fadeOut = FadeOut::create(.25);
 	pauseMenubg->runAction(fadeOut);
 
-	paused = false; //unpause the game
+	paused = false;
+#if defined(__EMSCRIPTEN__)
+    CocosDenshion::SimpleAudioEngine::getInstance()->resumeBackgroundMusic();
+#endif //unpause the game
 }
 
 void GameScene3::restart(Ref *psender){
@@ -297,6 +336,10 @@ void GameScene3::restart(Ref *psender){
 void GameScene3::selectLevel(Ref *psender){
 
 	//replaces current scene with a new scene of the next level
+#if defined(__EMSCRIPTEN__)
+    CocosDenshion::SimpleAudioEngine::getInstance()->stopBackgroundMusic();
+    CocosDenshion::SimpleAudioEngine::getInstance()->stopAllEffects();
+#endif
 	auto newScene = StartScreen::createScene(true);
 	Director::getInstance()->replaceScene(TransitionFade::create(1.0f, newScene));
 }

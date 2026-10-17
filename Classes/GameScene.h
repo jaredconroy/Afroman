@@ -4,6 +4,7 @@
 #include "cocos2d.h"
 #include "Level.h"
 #include "Player.h"
+#include "GameCountdown.h"
 #include <algorithm>
 #include <string>
 #include <vector>
@@ -49,14 +50,18 @@ public:
 	Point center;
 	Point point;
 
-	bool sewer;
-	bool slow;
-	bool ladder;
+	bool sewer = false;
+	bool slow = false;
+	bool ladder = false;
 	bool disguised;
 	bool paused;
 	float PLAYER_MAX_VELOCITY = 8.0f;
 	int time = 60;
 	int timeBySecond = 60;
+    afroman::GameCountdown countdown;
+    float ladderCenterX = 0, sewerCenterX = 0, flushBoundaryX = 0;
+    bool touchingFlushWall = false;
+
 	int minutes;
 	int seconds;
 	
