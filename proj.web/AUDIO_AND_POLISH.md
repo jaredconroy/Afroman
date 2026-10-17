@@ -206,3 +206,16 @@ and all runtime asset URLs. Diagnostics displays this ID. `serve.sh` uses the
 local no-store server to avoid stale development assets. After rebuilding, reopen
 `afroman.html?v=<build-web/build-id.txt value>`; a running page still needs a reload
 to replace its already-loaded runtime. Compare Diagnostics IDs between previews.
+
+## Bin landing and car headlight follow-up
+
+Bin feedback now follows actual resolved wall/ground contacts. Slow descents
+count as landings; continuing contact is latched, and side impacts require motion
+toward the bin from outside, preventing walk-off feedback. The time cooldown
+is removed so a new jump/landing can react immediately. Metal audio now emphasizes
+inharmonic 583–4133 Hz resonances; slosh is unchanged.
+
+Landing on the blue car toggles its front headlamp and pale beam. Its authored
+collision tiles span columns 137–155; continued standing/walking on it does not
+retoggle the lamp. Both features remain browser-only. Build verification passes;
+interactive gameplay validation remains to be confirmed.

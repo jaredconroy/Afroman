@@ -105,6 +105,13 @@ bool GameScene::init()
     trashBin->setScale(2);
     trashBin->setPosition(5680,1024);
     this->addChild(trashBin,11);
+    // Headlamp on the authored blue car's front bumper (TMX column 155).
+    carLights = DrawNode::create();
+    drawLightRect(carLights,Vec2(4968,1128),Vec2(4992,1144),Color4F(1,1,.88f,1));
+    Vec2 beam[] = {Vec2(4992,1128),Vec2(5250,1064),Vec2(5250,1208),Vec2(4992,1144)};
+    carLights->drawPolygon(beam,4,Color4F(1,1,.8f,.22f),0,Color4F(1,1,1,0));
+    carLights->setVisible(false);
+    this->addChild(carLights,12);
     // Authored bathroom interior: native TMX x=208..368, y=0..288, at 2x scale.
     bathroomShade = LayerColor::create(Color4B(0,0,0,115),320,576);
     bathroomShade->setPosition(416,1024);
@@ -288,7 +295,7 @@ void GameScene::updateScene(float delta){
 
 void GameScene::updatePlayer(float delta){
 #if defined(__EMSCRIPTEN__)
-    trashCooldown = std::max(0.0f,trashCooldown-delta);
+
 #endif
 
 	//what it does when certain keys are pressed
@@ -359,19 +366,7 @@ void GameScene::updatePlayer(float delta){
 		player_sprite->setFlippedX(false);
 	}
 
-#if defined(__EMSCRIPTEN__)
-    const float fallingSpeed = player->velocity.y;
-#endif
-	this->getCollisionTiles(delta); //gets the collidable tiles
-#if defined(__EMSCRIPTEN__)
-    if (fallingSpeed < -5 && player->velocity.y == 0) {
-        const float left = player->position.x + (player->facingRight ? 0 : player->player_size.width*.25f);
-        const bool onBin = left < 5760 && left+player->player_size.width*.75f > 5600 &&
-            std::abs(player->position.y-1216) <= 2;
-        if (onBin) hitTrashBin();
-        else CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("web-audio/land.wav",false,1,0,0.5625f);
-    }
-#endif
+    this->getCollisionTiles(delta); //gets the collidable tiles
 
 	if (slow){
 		PLAYER_MAX_VELOCITY = 5.0f;
@@ -527,10 +522,21 @@ void GameScene::getCollisionTiles(float delta){
 
 #if defined(__EMSCRIPTEN__)
     bool flushContact = false;
-    // Probe the predicted collider against the bin itself. Legacy wall resolution
-    // can select another neighboring tile first, so tile-identity hooks miss bumps.
-    const bool trashContact = player->velocity.x != 0 && player->position.y < 1214 &&
-        player_rect.intersectsRect(Rect(5594,1024,172,192));
+    bool binContact = false, carContact = false, landed = false;
+    const float incomingY = player->velocity.y;
+    const float feetBefore = player->position.y;
+    const float leftBefore = player->position.x + (player->facingRight ? 0 : player->player_size.width*.25f);
+    auto binTile = [](const Rect& tile) {
+        return tile.getMinX() >= 5600 && tile.getMaxX() <= 5760 &&
+            tile.getMinY() >= 1024 && tile.getMaxY() <= 1216;
+    };
+    auto groundContact = [&](const Rect& tile) {
+        if (incomingY > 0 || feetBefore < tile.getMaxY()-2) return;
+        landed = true;
+        binContact = binContact || binTile(tile);
+        carContact = carContact || (tile.getMinX() >= 4384 && tile.getMaxX() <= 4992 &&
+            tile.getMinY() >= 1088 && tile.getMaxY() <= 1280);
+    };
 #endif
 	// Wall collision
 
@@ -540,6 +546,12 @@ void GameScene::getCollisionTiles(float delta){
 	for (Rect tile : tiles) {
 		if (player_rect.intersectsRect(tile)) {
 #if defined(__EMSCRIPTEN__)
+            // Side impacts must originate outside the bin, so walking off its
+            // top cannot become a new side impact during the following fall.
+            if (binTile(tile) && feetBefore < 1214 &&
+                ((player->velocity.x > 0 && leftBefore+player->player_size.width*.75f <= 5602) ||
+                 (player->velocity.x < 0 && leftBefore >= 5758)))
+                binContact = true;
             flushContact = !player->facingRight && player->velocity.x < 0 &&
                 tile.getMaxX() <= flushBoundaryX + 0.1f && cameraTarget->getPositionY() == 1280;
 #endif
@@ -560,8 +572,6 @@ void GameScene::getCollisionTiles(float delta){
     if (flushContact && !touchingFlushWall)
         CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("web-audio/flush.wav");
     touchingFlushWall = flushContact;
-    if (trashContact && !touchingTrashBin) hitTrashBin();
-    touchingTrashBin = trashContact;
 #endif
 	// Ground collision
 
@@ -589,6 +599,9 @@ void GameScene::getCollisionTiles(float delta){
 		player->grounded = false;
 		if (tile.intersectsRect(player_rect)) {
 
+#if defined(__EMSCRIPTEN__)
+            groundContact(tile);
+#endif
 			player->position.y = tile.getMaxY();
 			// if we hit the ground, mark us as grounded so we can jump
 			player->grounded = true;
@@ -604,6 +617,9 @@ void GameScene::getCollisionTiles(float delta){
 		player->grounded = false;
 		if (tile.intersectsRect(player_rect)) {
 
+#if defined(__EMSCRIPTEN__)
+            groundContact(tile);
+#endif
 			player->position.y = tile.getMaxY();
 			// if we hit the ground, mark us as grounded so we can jump
 			player->grounded = true;
@@ -618,6 +634,17 @@ void GameScene::getCollisionTiles(float delta){
 	tiles.clear();
 	corners.clear();
 
+#if defined(__EMSCRIPTEN__)
+    if (binContact && !touchingTrashBin) hitTrashBin();
+    if (carContact && !touchingCar) {
+        carLightsOn = !carLightsOn;
+        carLights->setVisible(carLightsOn);
+    }
+    if (landed && incomingY < -5 && !binContact)
+        CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("web-audio/land.wav",false,1,0,.5625f);
+    touchingTrashBin = binContact;
+    touchingCar = carContact;
+#endif
 	// Sewer collision
 
 	tiles = level->getTiles(tmp, -1, -1, "sewer");
@@ -985,8 +1012,6 @@ void GameScene::updateBathroomLight() {
 
 #if defined(__EMSCRIPTEN__)
 void GameScene::hitTrashBin() {
-    if (trashCooldown > 0) return;
-    trashCooldown = .4f;
     auto audio = CocosDenshion::SimpleAudioEngine::getInstance();
     audio->playEffect("web-audio/trash-metal.wav",false,1,0,.85f);
     audio->playEffect("web-audio/trash-slosh.wav",false,1,0,.65f);
