@@ -82,3 +82,13 @@ and resume; pause/control AFROMAN logos aligned. The final score panel left all
 drum labels visible at full brightness, retained three original buttons with
 clear logo spacing, and accepted all seven drum keys without altering the final
 80/93 score during the check.
+
+Score-panel spacing: the panel/menu group is 40 pixels left and 12 pixels down
+from the previous placement. Its left edge is at canvas x=293, leaving a gutter
+after the longest TOM label equal to the labels' 17-pixel outer left margin. The
+score artwork's alpha-128 dim strips are discarded, and its gray backing ends
+at source y=560 so it clears the BASS rail after lowering the panel. Original
+SCORE and AFROMAN lettering is retained; source PNGs are unchanged.
+
+Safari verified the top-right score and BASS rail remain undimmed and clear of
+the gray backing; SCORE/AFROMAN lettering and all three buttons render correctly.

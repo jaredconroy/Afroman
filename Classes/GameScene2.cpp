@@ -3,6 +3,9 @@
 #include "globals.h"
 #include "SimpleAudioEngine.h"
 #if defined(__EMSCRIPTEN__)
+#include "renderer/ccShaders.h"
+#endif
+#if defined(__EMSCRIPTEN__)
 #include "WebRhythm.h"
 #endif
 
@@ -92,6 +95,26 @@ bool GameScene2::init()
 #if defined(__EMSCRIPTEN__)
     // Use only the score panel; the source image's outer alpha-128 black dims the kit.
     youWinMenubg = Sprite::create("score.png", Rect(233,40,584,555));
+    // Remove the artwork's residual half-alpha dimming strips. Shorten the gray
+    // backing above BASS, while preserving the original SCORE/AFROMAN lettering.
+    auto panelProgram = GLProgram::createWithByteArrays(ccPositionTextureColor_noMVP_vert, R"(
+#ifdef GL_ES
+precision mediump float;
+varying lowp vec4 v_fragmentColor;
+varying mediump vec2 v_texCoord;
+#else
+varying vec4 v_fragmentColor;
+varying vec2 v_texCoord;
+#endif
+void main() {
+    vec4 pixel = texture2D(CC_Texture0, v_texCoord);
+    if (pixel.a < 0.75) discard;
+    bool gray = pixel.r < 0.5 && abs(pixel.r-pixel.g) < 0.01 && abs(pixel.g-pixel.b) < 0.01;
+    if (v_texCoord.y >= 560.0/640.0 && gray) discard;
+    gl_FragColor = v_fragmentColor * pixel;
+}
+)");
+    youWinMenubg->setGLProgramState(GLProgramState::getOrCreateWithGLProgram(panelProgram));
 #else
 	youWinMenubg = Sprite::create("score.png");
 #endif
@@ -369,14 +392,14 @@ void GameScene2::youWinMenu(){
 
 #if defined(__EMSCRIPTEN__)
         resultsFreePlay = true; // Drums remain playable behind the final score menu.
-        scoreLabel2->setPosition(cameraTarget->getPosition() + Vec2(100,155));
+        scoreLabel2->setPosition(cameraTarget->getPosition() + Vec2(60,143));
 #endif
 		scoreLabel2->setVisible(true);
 
 		pauseMenu2 = Menu::createWithArray(menuItems);
 		pauseMenu2->setPosition(cameraTarget->getPosition()
 #if defined(__EMSCRIPTEN__)
-            + Vec2(100,0)
+            + Vec2(60,-12)
 #endif
         );
 		pauseMenu2->setGlobalZOrder(10000);
