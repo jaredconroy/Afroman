@@ -35,7 +35,7 @@ public:
 
 	void updateScene(float interval);
 
-	static cocos2d::Scene* createScene();
+	static cocos2d::Scene* createScene(bool showLevelSelection = false);
 
 	virtual bool init();
 

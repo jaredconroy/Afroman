@@ -771,7 +771,7 @@ void GameScene::restart(Ref *psender){
 void GameScene::selectLevel(Ref *psender){
 	
 	//replaces current scene with a new scene of the next level
-	auto newScene = StartScreen::createScene();
+	auto newScene = StartScreen::createScene(true);
 	Director::getInstance()->replaceScene(TransitionFade::create(1.0f, newScene));
 }
 

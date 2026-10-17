@@ -6,13 +6,22 @@
 #include "GameScene3.h"
 
 
-Scene* StartScreen::createScene()
+Scene* StartScreen::createScene(bool showLevelSelection)
 {
 	auto scene = Scene::create();
 
 	auto layer = StartScreen::create();
 
 	scene->addChild(layer);
+    if (showLevelSelection) {
+        layer->unscheduleAllSelectors();
+        layer->sprite->stopAllActions();
+        layer->sprite2->stopAllActions();
+        layer->sprite->removeFromParent();
+        layer->selectMenu();
+        layer->selectMenubg->stopAllActions();
+        layer->selectMenubg->setOpacity(255);
+    }
 
 	return scene;
 }

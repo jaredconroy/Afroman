@@ -39,11 +39,15 @@ does not eliminate keyboard, display or Bluetooth latency on every device.
 Each drum press pulses its letter square and flashes a 50×50 border matching the
 white key frame: neon green for a scored hit, bright red for an off-time press,
 and neutral white during the controls intro. A matched note briefly becomes fully
-opaque, then fades back to its original translucent appearance, with the same
+opaque, then stays opaque until it leaves the screen, with the same
 colored border. Off-time presses also flash a nearby unhit note within 300 ms;
-more distant notes are left alone. Effects expire in about 300 ms and repeated
+more distant notes are left alone. Borders are 4.5 px thick (previously 2.5 px)
+and expire in about 410 ms; key squares pulse to 122% scale and repeated
 presses replace the previous key flash. Feedback reads the existing judgment;
 the +/-90 ms hit window, scoring, audio clock, and calibration are unchanged.
+
+SELECT LEVEL in every pause/end menu opens the three level buttons directly.
+The opening animation remains available on initial launch and EXIT.
 
 ## EXIT
 
@@ -69,3 +73,6 @@ for a listening check of chart-to-track alignment.
 Safari regression testing (2026-10-17): level 1 pause/EXIT returned to an interactive
 level-selection menu; level 2 rendered moving notes and accepted input; pause,
 resume and restart remained functional. Final musical alignment was not certified.
+
+Safari check (2026-10-17): level 2 pause/SELECT LEVEL opened the three-button
+selection screen without replaying the title animation.

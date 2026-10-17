@@ -138,8 +138,8 @@ void addFeedbackRing(Node* parent, float side, float thickness, const Color4B& c
     }
 }
 void addFeedbackBorder(Node* parent, const Color4B& color) {
-    addFeedbackRing(parent, 54, 4, Color4B(color.r,color.g,color.b,65), 1);
-    addFeedbackRing(parent, 50, 2.5f, color, 2);
+    addFeedbackRing(parent, 56, 5, Color4B(color.r,color.g,color.b,90), 1);
+    addFeedbackRing(parent, 50, 4.5f, color, 2);
 }
 }
 
@@ -158,13 +158,13 @@ void GameScene2::showRhythmFeedback(int lane, bool hit, bool practice, int colum
 
     auto key = Sprite::create("level2bg.png", Rect(966,75+80*lane,50,50));
     key->setBlendFunc(BlendFunc::ADDITIVE); // black pixels must not obscure the flashing note
-    key->setOpacity(175);
+    key->setOpacity(230);
     receptor->addChild(key, 0);
     key->runAction(Sequence::create(
-        EaseOut::create(ScaleTo::create(0.045f,1.12f),2.0f),
-        EaseIn::create(ScaleTo::create(0.14f,1.0f),2.0f), nullptr));
+        EaseOut::create(ScaleTo::create(0.065f,1.22f),2.0f),
+        EaseIn::create(ScaleTo::create(0.22f,1.0f),2.0f), nullptr));
     addFeedbackBorder(receptor, color);
-    receptor->runAction(Sequence::create(DelayTime::create(0.055f),FadeOut::create(0.25f),RemoveSelf::create(),nullptr));
+    receptor->runAction(Sequence::create(DelayTime::create(0.09f),FadeOut::create(0.32f),RemoveSelf::create(),nullptr));
 
     if (column < 0 || practice) return;
     const char* lanes[] = {"cymbal","hihat","snare","tom1","tom2","tom3","bass"};
@@ -175,6 +175,7 @@ void GameScene2::showRhythmFeedback(int lane, bool hit, bool practice, int colum
     if (auto previous = level->getMap()->getChildByName(name)) previous->removeFromParent();
     auto note = Node::create();
     note->setCascadeOpacityEnabled(true);
+    note->setTag(71010);
     note->setPosition(layer->getPosition()+tile->getPosition()+Vec2(20,20));
     level->getMap()->addChild(note,100,name);
 
@@ -188,10 +189,20 @@ void GameScene2::showRhythmFeedback(int lane, bool hit, bool practice, int colum
     auto fill = LayerColor::create(palette[lane],40,40);
     fill->setPosition(-20,-20);
     note->addChild(fill);
-    addFeedbackBorder(note,color);
+    auto border = Node::create();
+    border->setCascadeOpacityEnabled(true);
+    note->addChild(border);
+    addFeedbackBorder(border,color);
+    border->runAction(Sequence::create(DelayTime::create(0.09f),
+        FadeOut::create(0.32f),RemoveSelf::create(),nullptr));
     note->setOpacity(0);
-    note->runAction(Sequence::create(FadeIn::create(0.025f),DelayTime::create(0.04f),
-        FadeOut::create(0.23f),RemoveSelf::create(),nullptr));
+    if (hit) {
+        // Keep the hit note opaque until it has travelled safely beyond the canvas.
+        note->runAction(FadeIn::create(0.025f));
+    } else {
+        note->runAction(Sequence::create(FadeIn::create(0.025f),DelayTime::create(0.04f),
+            FadeOut::create(0.23f),RemoveSelf::create(),nullptr));
+    }
 }
 
 void GameScene2::updateRhythm() {
@@ -199,6 +210,15 @@ void GameScene2::updateRhythm() {
     const double seconds = afroman::musicTime();
     const double offset = afroman::calibrationOffset();
     level->getMap()->setPositionX(rhythm.position(seconds, offset));
+    // Remove opaque hit overlays only after the chart carries them offscreen.
+    // Pausing must not make a hit note translucent again.
+    auto map = level->getMap();
+    for (int i = static_cast<int>(map->getChildrenCount()) - 1; i >= 0; --i) {
+        auto child = map->getChildren().at(i);
+        if (child->getTag() == 71010 &&
+            map->getPositionX() + child->getPositionX() > bg_sprite->getPositionX() + 555)
+            child->removeFromParent();
+    }
     // Re-evaluate at keydown, not from a potentially stale rendered frame.
     if (!controlsDismissed && level->getMap()->getPositionX() >=
         -center.x - level->getMap()->getContentSize().width) {
@@ -366,7 +386,7 @@ void GameScene2::selectLevel(Ref *psender){
 #endif
 
 	//replaces current scene with a new scene of the next level
-	auto newScene = StartScreen::createScene();
+	auto newScene = StartScreen::createScene(true);
 	Director::getInstance()->replaceScene(TransitionFade::create(1.0f, newScene));
 }
 
