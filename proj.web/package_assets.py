@@ -37,8 +37,12 @@ for source in sorted((args.source / 'web-audio').glob('*')):
     if source.suffix.lower() != '.wav' and source.with_suffix('.wav').exists():
         continue
     destination = args.output / 'web-audio' / (source.stem + '.wav')
+    filters = []
+    if source.stem == 'crowd':
+        # Quick entry and natural end, independent of the recording's duration.
+        filters = ['-af', 'afade=t=in:st=0:d=0.2,areverse,afade=t=in:st=0:d=0.5,areverse']
     subprocess.run([args.ffmpeg, '-nostdin', '-v', 'error', '-y', '-i', str(source),
-        '-map_metadata', '-1', '-ar', '44100', '-c:a', 'pcm_s16le', str(destination)], check=True)
+        '-map_metadata', '-1', '-ar', '44100', '-c:a', 'pcm_s16le', *filters, str(destination)], check=True)
     custom_audio.append(str(destination.relative_to(args.output)))
 audio = args.output / 'browser-audio'
 audio.mkdir(exist_ok=True)

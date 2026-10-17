@@ -95,7 +95,7 @@ bool StartScreen::init()
                 neonStarted = true;
                 titleEffects.push_back(audio->playEffect("web-audio/neon-plink.wav"));
                 titleEffects.push_back(audio->playEffect("web-audio/guitar.wav",false,1,0,0.7f));
-                titleEffects.push_back(audio->playEffect("web-audio/crowd.wav",true,1,0,0.35f));
+                titleEffects.push_back(audio->playEffect("web-audio/crowd.wav",false,1,0,0.35f));
                 neonBuzz = audio->playEffect("web-audio/neon-buzz.wav",true);
                 titleEffects.push_back(neonBuzz);
             }

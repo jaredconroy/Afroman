@@ -137,3 +137,24 @@ use the same basename when replacing a cue. A same-basename source WAV takes
 priority over MP3/Ogg. Packaging excludes `_old` audio backups and `.DS_Store`,
 while leaving them untouched on disk. The existing scripts that restore original
 placeholder sounds are never run by a normal build.
+
+## Bathroom lighting, victory guitar, and crowd ending
+
+The latest user crowd and neon-plink replacements are packaged without modifying
+source files. The title crowd now plays **once** (no loop). Packaging applies a
+200 ms fade-in and 500 ms fade-out to its staged WAV, independent of duration;
+Enter still immediately stops title-owned sounds. Level 1 also plays guitar.wav
+alongside its victory cue when the destination is reached with time remaining.
+
+The level 1 bathroom interior is taken from the authored upper-floor tilemap:
+world x=416..736, y=1024..1600 at the map's 2× scale. A ceiling fixture and warm
+light switch on as the player's center enters, and off on exit. The room shade
+transitions over 120 ms; a 16-pixel doorway hysteresis prevents repeated clicks
+while straddling the boundary. `web-audio/lightswitch.wav` is an original
+synthesized click, replaceable like the other cues. Its optional manual generator
+is `proj.web/generate_switch_audio.py`; builds do not run it.
+
+Verification: browser asset decode/startup succeeded; the staged 25.875-second
+crowd recording starts and ends at silence. The build passes. Bathroom entry/exit
+visual verification was interrupted by a browser-control timeout and remains a
+play check; the trigger was located from the actual TMX artwork and collision map.

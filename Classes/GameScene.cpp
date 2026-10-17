@@ -6,6 +6,10 @@
 
 #if defined(__EMSCRIPTEN__)
 namespace {
+void drawLightRect(DrawNode* node, Vec2 a, Vec2 b, const Color4F& color) {
+    Vec2 corners[] = {a,Vec2(b.x,a.y),b,Vec2(a.x,b.y)};
+    node->drawPolygon(corners,4,color,0,Color4F(0,0,0,0));
+}
 float triggerCenter(Level* level, const char* name, const Rect& tile) {
     auto map = level->getMap();
     auto layer = map->getLayer(name);
@@ -89,6 +93,14 @@ bool GameScene::init()
 	player->player_size.width = player_sprite->getBoundingBox().size.width;
 	player->player_size.height = player_sprite->getBoundingBox().size.height;
 #if defined(__EMSCRIPTEN__)
+    // Authored bathroom interior: native TMX x=208..368, y=0..288, at 2x scale.
+    bathroomShade = LayerColor::create(Color4B(0,0,0,115),320,576);
+    bathroomShade->setPosition(416,1024);
+    this->addChild(bathroomShade,-50);
+    bathroomLamp = DrawNode::create();
+    this->addChild(bathroomLamp,-40);
+    drawLightRect(bathroomLamp,Vec2(562,1512),Vec2(590,1520),Color4F(.28f,.28f,.28f,1));
+    drawLightRect(bathroomLamp,Vec2(568,1506),Vec2(584,1512),Color4F(.48f,.46f,.38f,1));
     // Find the left wall on the spawn row without materializing the whole TMX layer.
     auto walls = level->getMap()->getLayer("walls");
     const float tileWidth = level->getMap()->getTileSize().width * SCALE_FACTOR;
@@ -245,13 +257,16 @@ void GameScene::updateScene(float delta){
 		menu->setPosition(cameraTarget->getPositionX() - (.47 * wsize.width), cameraTarget->getPositionY() + (.45 * wsize.height));
 
 		this->updatePlayer(delta);
+#if defined(__EMSCRIPTEN__)
+        updateBathroomLight();
+#endif
 	}
 	//if time runs out, go to game over
 	if (time == 0){ 
 		gameOverMenu();
 	}
 	//if the player reaches the destination, go to the "you win" menu
-	if ((player_sprite->getPositionX() >= ((2 * level->getMap()->getContentSize().width) - wsize.height)) && (cameraTarget->getPositionY() == 1280)){
+	if (time > 0 && (player_sprite->getPositionX() >= ((2 * level->getMap()->getContentSize().width) - wsize.height)) && (cameraTarget->getPositionY() == 1280)){
 		youWinMenu();
 	}
 }
@@ -820,6 +835,7 @@ void GameScene::youWinMenu(){
 #if defined(__EMSCRIPTEN__)
         CocosDenshion::SimpleAudioEngine::getInstance()->pauseBackgroundMusic();
         CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("web-audio/win.wav");
+        CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("web-audio/guitar.wav",false,1,0,0.7f);
 #endif
 
 
@@ -918,3 +934,26 @@ GameScene::GameScene(void)
 GameScene::~GameScene(void)
 {
 }
+
+#if defined(__EMSCRIPTEN__)
+void GameScene::updateBathroomLight() {
+    const float centerX = player->position.x + player->player_size.width * 0.5f;
+    // A small doorway hysteresis prevents rapid clicks while straddling its edge.
+    const bool entered = centerX >= 416 && centerX < (bathroomOccupied ? 752 : 736) &&
+        player->position.y >= 1020 && player->position.y < 1600;
+    if (entered == bathroomOccupied) return;
+    bathroomOccupied = entered;
+    CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("web-audio/lightswitch.wav");
+    bathroomShade->stopAllActions();
+    bathroomShade->runAction(FadeTo::create(.12f,entered ? 8 : 115));
+    bathroomLamp->clear();
+    if (entered) {
+        Vec2 cone[] = {Vec2(562,1512),Vec2(590,1512),Vec2(736,1024),Vec2(416,1024)};
+        bathroomLamp->drawPolygon(cone,4,Color4F(1,.88f,.45f,.10f),0,Color4F(0,0,0,0));
+        bathroomLamp->drawDot(Vec2(576,1508),24,Color4F(1,.88f,.45f,.13f));
+    }
+    drawLightRect(bathroomLamp,Vec2(562,1512),Vec2(590,1520),Color4F(.28f,.28f,.28f,1));
+    drawLightRect(bathroomLamp,Vec2(568,1506),Vec2(584,1512),
+        entered ? Color4F(1,.98f,.76f,1) : Color4F(.48f,.46f,.38f,1));
+}
+#endif

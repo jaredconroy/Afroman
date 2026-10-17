@@ -61,6 +61,12 @@ public:
     afroman::GameCountdown countdown;
     float ladderCenterX = 0, sewerCenterX = 0, flushBoundaryX = 0;
     bool touchingFlushWall = false;
+#if defined(__EMSCRIPTEN__)
+    bool bathroomOccupied = false;
+    LayerColor* bathroomShade = nullptr;
+    DrawNode* bathroomLamp = nullptr;
+    void updateBathroomLight();
+#endif
 
 	int minutes;
 	int seconds;
