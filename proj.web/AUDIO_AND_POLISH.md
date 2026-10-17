@@ -269,3 +269,11 @@ The original inner foot support range and impact latch remain. Tests cover both
 edge boundaries, fast/slow downward crossings, upward motion and repeat impacts.
 The horn now uses 220/277 Hz fundamentals with harmonics and lasts 380 ms.
 Build and focused regression tests pass; visual gameplay confirmation remains.
+
+## Restore confirmed bin behavior
+
+Restored the complete collision routine, support latch, and its tests from
+commit 0f3112f, the version reported to have correct contact triggering before
+the narrower-edge request. This restores the earlier wider support behavior
+as requested. Current solid headlights and horn playback remain. Horn pitch
+returns to 440/554 Hz with a fuller harmonic blend and a shaped honk attack.

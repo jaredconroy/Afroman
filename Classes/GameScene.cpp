@@ -548,15 +548,12 @@ void GameScene::getCollisionTiles(float delta){
 	for (Rect tile : tiles) {
 		if (player_rect.intersectsRect(tile)) {
 #if defined(__EMSCRIPTEN__)
-            // The bin top is resolved once as a continuous surface below.
-            // Inclusive tile-edge intersections must never become side walls.
-            if (binTile(tile)) {
-                const bool towardSide = feetBefore < 1214 &&
-                    ((player->velocity.x > 0 && leftBefore+player->player_size.width*.75f <= 5602) ||
-                     (player->velocity.x < 0 && leftBefore >= 5758));
-                if (!towardSide) continue;
+            // Side impacts must originate outside the bin, so walking off its
+            // top cannot become a new side impact during the following fall.
+            if (binTile(tile) && feetBefore < 1214 &&
+                ((player->velocity.x > 0 && leftBefore+player->player_size.width*.75f <= 5602) ||
+                 (player->velocity.x < 0 && leftBefore >= 5758)))
                 binContact = true;
-            }
             flushContact = !player->facingRight && player->velocity.x < 0 &&
                 tile.getMaxX() <= flushBoundaryX + 0.1f && cameraTarget->getPositionY() == 1280;
 #endif
@@ -579,9 +576,7 @@ void GameScene::getCollisionTiles(float delta){
     touchingFlushWall = flushContact;
 #endif
 	// Ground collision
-#if defined(__EMSCRIPTEN__)
-    player->grounded = false;
-#endif
+
 	tiles = level->getTiles(tmp, -1, -1, "walls");
 	corners = level->getTiles(corner, -1, -1, "walls");
 
@@ -603,9 +598,6 @@ void GameScene::getCollisionTiles(float delta){
 	}
 
 	for (Rect tile : tiles) {
-#if defined(__EMSCRIPTEN__)
-        if (binTile(tile)) continue; // Continuous bin surface owns its support.
-#endif
 		player->grounded = false;
 		if (tile.intersectsRect(player_rect)) {
 
@@ -624,9 +616,6 @@ void GameScene::getCollisionTiles(float delta){
 	}
 
 	for (Rect tile : corners) {
-#if defined(__EMSCRIPTEN__)
-        if (binTile(tile)) continue; // Continuous bin surface owns its support.
-#endif
 		player->grounded = false;
 		if (tile.intersectsRect(player_rect)) {
 
@@ -651,12 +640,9 @@ void GameScene::getCollisionTiles(float delta){
     // A swept top-plane test handles gentle landings and tile-corner misses.
     const float leftAfter = player->position.x + player->velocity.x +
         (player->facingRight ? 0 : player->player_size.width*.25f);
-    // Use the original inner foot probe, rather than any overlap of the wide
-    // sprite collider, to decide whether the bin actually supports the player.
-    const float supportX = player->position.x + player->velocity.x +
-        player->player_size.width*(player->facingRight ? 3.f/7 : 4.f/7);
-    const bool overBin = supportX >= 5600 && supportX < 5760;
-    const bool crossedTop = afroman::binTopSupports(supportX,feetBefore,incomingY);
+    const bool overBin = leftAfter < 5760 && leftAfter+player->player_size.width*.75f > 5600;
+    const bool crossedTop = overBin && incomingY <= 0 && feetBefore >= 1216 &&
+        feetBefore+incomingY <= 1216;
     if (crossedTop) {
         player->position.y = 1216;
         player->velocity.y = 0;
