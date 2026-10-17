@@ -60,7 +60,7 @@ bool StartScreen::init()
             sprite->setTexture("start1/start" + to_string(frame) + ".jpg");
             if (titleAudioEnabled && frame >= 2)
                 titleEffects.push_back(CocosDenshion::SimpleAudioEngine::getInstance()->playEffect(
-                    "web-audio/spotlight.wav",false,frame==2 ? 1.0f : 1.08f,
+                    "web-audio/spotlight.wav",false,1.0f,
                     frame==2 ? -0.35f : 0.35f,0.8f));
         }));
         intro.pushBack(DelayTime::create(1.0f));
@@ -93,9 +93,9 @@ bool StartScreen::init()
             auto audio = CocosDenshion::SimpleAudioEngine::getInstance();
             if (!neonStarted) {
                 neonStarted = true;
-                titleEffects.push_back(audio->playEffect("web-audio/neon-plink.wav"));
+                titleEffects.push_back(audio->playEffect("web-audio/spotlight.wav",false,1.0f,0,0.8f));
                 titleEffects.push_back(audio->playEffect("web-audio/guitar.wav",false,1,0,0.7f));
-                titleEffects.push_back(audio->playEffect("web-audio/crowd.wav",false,1,0,0.35f));
+                titleEffects.push_back(audio->playEffect("web-audio/crowd.wav",false,1,0,0.45f));
                 neonBuzz = audio->playEffect("web-audio/neon-buzz.wav",true);
                 titleEffects.push_back(neonBuzz);
             }

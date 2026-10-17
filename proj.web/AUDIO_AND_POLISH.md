@@ -158,3 +158,12 @@ Verification: browser asset decode/startup succeeded; the staged 25.875-second
 crowd recording starts and ends at silence. The build passes. Bathroom entry/exit
 visual verification was interrupted by a browser-control timeout and remains a
 play check; the trigger was located from the actual TMX artwork and collision map.
+
+## Latest mix adjustments
+
+Landing plays at 75% gain. All three title spotlight cues (left, right, neon)
+use pitch 1.0 and gain 0.8; the neon cue replaces the plink. Title guitar remains,
+but level 1 victory no longer plays guitar. Crowd gain is 45%, retaining the
+one-shot fades. The lit bathroom has no remaining dark shade, a brighter warm
+cone (22% alpha), and a larger/brighter fixture glow (radius 32, 28% alpha).
+Source sound files remain unchanged by these playback-gain adjustments.

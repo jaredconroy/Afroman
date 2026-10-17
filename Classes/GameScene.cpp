@@ -347,7 +347,7 @@ void GameScene::updatePlayer(float delta){
 	this->getCollisionTiles(delta); //gets the collidable tiles
 #if defined(__EMSCRIPTEN__)
     if (fallingSpeed < -5 && player->velocity.y == 0)
-        CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("web-audio/land.wav");
+        CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("web-audio/land.wav",false,1,0,0.75f);
 #endif
 
 	if (slow){
@@ -835,7 +835,6 @@ void GameScene::youWinMenu(){
 #if defined(__EMSCRIPTEN__)
         CocosDenshion::SimpleAudioEngine::getInstance()->pauseBackgroundMusic();
         CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("web-audio/win.wav");
-        CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("web-audio/guitar.wav",false,1,0,0.7f);
 #endif
 
 
@@ -945,12 +944,12 @@ void GameScene::updateBathroomLight() {
     bathroomOccupied = entered;
     CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("web-audio/lightswitch.wav");
     bathroomShade->stopAllActions();
-    bathroomShade->runAction(FadeTo::create(.12f,entered ? 8 : 115));
+    bathroomShade->runAction(FadeTo::create(.12f,entered ? 0 : 115));
     bathroomLamp->clear();
     if (entered) {
         Vec2 cone[] = {Vec2(562,1512),Vec2(590,1512),Vec2(736,1024),Vec2(416,1024)};
-        bathroomLamp->drawPolygon(cone,4,Color4F(1,.88f,.45f,.10f),0,Color4F(0,0,0,0));
-        bathroomLamp->drawDot(Vec2(576,1508),24,Color4F(1,.88f,.45f,.13f));
+        bathroomLamp->drawPolygon(cone,4,Color4F(1,.94f,.65f,.22f),0,Color4F(0,0,0,0));
+        bathroomLamp->drawDot(Vec2(576,1508),32,Color4F(1,.94f,.65f,.28f));
     }
     drawLightRect(bathroomLamp,Vec2(562,1512),Vec2(590,1520),Color4F(.28f,.28f,.28f,1));
     drawLightRect(bathroomLamp,Vec2(568,1506),Vec2(584,1512),
