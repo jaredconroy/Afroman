@@ -167,3 +167,27 @@ but level 1 victory no longer plays guitar. Crowd gain is 45%, retaining the
 one-shot fades. The lit bathroom has no remaining dark shade, a brighter warm
 cone (22% alpha), and a larger/brighter fixture glow (radius 32, 28% alpha).
 Source sound files remain unchanged by these playback-gain adjustments.
+
+## Brighter bathroom and trash-bin interaction
+
+Normal landing gain is now 0.5625 (another 25% reduction from 0.75). The guitar
+starts at neon turn-on; the third spotlight cue follows 120 ms later to account
+for the guitar recording's measured ~94 ms lead-in. Spotlight pitch remains 1.0.
+The bathroom uses a broad near-white cone, larger white fixture glow, and a
+separate white illumination layer inside the window pane.
+
+The first exterior bin is authored at TMX columns 175–179, body rows 12–17,
+with its lid on foreground row 11. Its art is displayed as one shaking sprite;
+the original collision tiles stay fixed and keep their GIDs. A side bump or
+landing on the bin triggers `trash-metal.wav` and `trash-slosh.wav`, a short
+3-degree/4-pixel shake, and four small scraps that fall and fade in 550 ms.
+A 400 ms cooldown avoids rapid retriggering, and sustained side contact triggers
+only once. A bin-top landing substitutes these sounds for the ordinary land.wav.
+
+Both new trash sounds are original synthesized placeholders; replace their WAVs
+and rebuild as usual. `generate_trash_audio.py` restores only these two defaults.
+
+Verification: browser build passes and both staged trash WAVs are valid,
+unclipped PCM. Bin visual/contact playtesting was interrupted by browser
+interaction and remains a gameplay check; collision coordinates were verified
+against the actual body/lid tile GIDs.

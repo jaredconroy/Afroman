@@ -10,6 +10,10 @@ void drawLightRect(DrawNode* node, Vec2 a, Vec2 b, const Color4F& color) {
     Vec2 corners[] = {a,Vec2(b.x,a.y),b,Vec2(a.x,b.y)};
     node->drawPolygon(corners,4,color,0,Color4F(0,0,0,0));
 }
+bool isTrashTile(const Rect& tile) {
+    return tile.getMinX() >= 5600 && tile.getMaxX() <= 5760 &&
+        tile.getMinY() >= 1024 && tile.getMaxY() <= 1216;
+}
 float triggerCenter(Level* level, const char* name, const Rect& tile) {
     auto map = level->getMap();
     auto layer = map->getLayer(name);
@@ -93,10 +97,25 @@ bool GameScene::init()
 	player->player_size.width = player_sprite->getBoundingBox().size.width;
 	player->player_size.height = player_sprite->getBoundingBox().size.height;
 #if defined(__EMSCRIPTEN__)
+    // Display the authored bin as one sprite so only its art shakes; TMX collision
+    // tiles remain present. Body is walls (175..179,12..17), lid is foreground row 11.
+    for (int x=175; x<=179; ++x) {
+        for (int y=12; y<=17; ++y)
+            if (auto tile = level->getMap()->getLayer("walls")->getTileAt(Vec2(x,y))) tile->setOpacity(0);
+        if (auto lid = fg->getMap()->getLayer("foreground")->getTileAt(Vec2(x,11))) lid->setOpacity(0);
+    }
+    trashBin = Sprite::create("tileSet.png",Rect(177,145,80,112));
+    trashBin->setAnchorPoint(Vec2(.5f,0));
+    trashBin->setScale(2);
+    trashBin->setPosition(5680,1024);
+    this->addChild(trashBin,11);
     // Authored bathroom interior: native TMX x=208..368, y=0..288, at 2x scale.
     bathroomShade = LayerColor::create(Color4B(0,0,0,115),320,576);
     bathroomShade->setPosition(416,1024);
     this->addChild(bathroomShade,-50);
+    bathroomWindowLight = LayerColor::create(Color4B(255,255,255,0),148,232);
+    bathroomWindowLight->setPosition(406,1184);
+    this->addChild(bathroomWindowLight,-45);
     bathroomLamp = DrawNode::create();
     this->addChild(bathroomLamp,-40);
     drawLightRect(bathroomLamp,Vec2(562,1512),Vec2(590,1520),Color4F(.28f,.28f,.28f,1));
@@ -272,6 +291,9 @@ void GameScene::updateScene(float delta){
 }
 
 void GameScene::updatePlayer(float delta){
+#if defined(__EMSCRIPTEN__)
+    trashCooldown = std::max(0.0f,trashCooldown-delta);
+#endif
 
 	//what it does when certain keys are pressed
 	if (std::find(heldKeys.begin(), heldKeys.end(), UP_ARROW) != heldKeys.end()) {
@@ -346,8 +368,10 @@ void GameScene::updatePlayer(float delta){
 #endif
 	this->getCollisionTiles(delta); //gets the collidable tiles
 #if defined(__EMSCRIPTEN__)
-    if (fallingSpeed < -5 && player->velocity.y == 0)
-        CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("web-audio/land.wav",false,1,0,0.75f);
+    if (fallingSpeed < -5 && player->velocity.y == 0) {
+        if (landedOnTrashBin) hitTrashBin();
+        else CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("web-audio/land.wav",false,1,0,0.5625f);
+    }
 #endif
 
 	if (slow){
@@ -504,6 +528,8 @@ void GameScene::getCollisionTiles(float delta){
 
 #if defined(__EMSCRIPTEN__)
     bool flushContact = false;
+    bool trashContact = false;
+    landedOnTrashBin = false;
 #endif
 	// Wall collision
 
@@ -513,6 +539,7 @@ void GameScene::getCollisionTiles(float delta){
 	for (Rect tile : tiles) {
 		if (player_rect.intersectsRect(tile)) {
 #if defined(__EMSCRIPTEN__)
+            trashContact = isTrashTile(tile) && player->velocity.x != 0;
             flushContact = !player->facingRight && player->velocity.x < 0 &&
                 tile.getMaxX() <= flushBoundaryX + 0.1f && cameraTarget->getPositionY() == 1280;
 #endif
@@ -533,6 +560,8 @@ void GameScene::getCollisionTiles(float delta){
     if (flushContact && !touchingFlushWall)
         CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("web-audio/flush.wav");
     touchingFlushWall = flushContact;
+    if (trashContact && !touchingTrashBin) hitTrashBin();
+    touchingTrashBin = trashContact;
 #endif
 	// Ground collision
 
@@ -560,6 +589,9 @@ void GameScene::getCollisionTiles(float delta){
 		player->grounded = false;
 		if (tile.intersectsRect(player_rect)) {
 
+#if defined(__EMSCRIPTEN__)
+            landedOnTrashBin = landedOnTrashBin || (isTrashTile(tile) && tile.getMaxY() == 1216);
+#endif
 			player->position.y = tile.getMaxY();
 			// if we hit the ground, mark us as grounded so we can jump
 			player->grounded = true;
@@ -575,6 +607,9 @@ void GameScene::getCollisionTiles(float delta){
 		player->grounded = false;
 		if (tile.intersectsRect(player_rect)) {
 
+#if defined(__EMSCRIPTEN__)
+            landedOnTrashBin = landedOnTrashBin || (isTrashTile(tile) && tile.getMaxY() == 1216);
+#endif
 			player->position.y = tile.getMaxY();
 			// if we hit the ground, mark us as grounded so we can jump
 			player->grounded = true;
@@ -945,14 +980,45 @@ void GameScene::updateBathroomLight() {
     CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("web-audio/lightswitch.wav");
     bathroomShade->stopAllActions();
     bathroomShade->runAction(FadeTo::create(.12f,entered ? 0 : 115));
+    bathroomWindowLight->stopAllActions();
+    bathroomWindowLight->runAction(FadeTo::create(.12f,entered ? 175 : 0));
     bathroomLamp->clear();
     if (entered) {
-        Vec2 cone[] = {Vec2(562,1512),Vec2(590,1512),Vec2(736,1024),Vec2(416,1024)};
-        bathroomLamp->drawPolygon(cone,4,Color4F(1,.94f,.65f,.22f),0,Color4F(0,0,0,0));
-        bathroomLamp->drawDot(Vec2(576,1508),32,Color4F(1,.94f,.65f,.28f));
+        Vec2 cone[] = {Vec2(562,1512),Vec2(590,1512),Vec2(768,1024),Vec2(384,1024)};
+        bathroomLamp->drawPolygon(cone,4,Color4F(1,1,.98f,.46f),0,Color4F(0,0,0,0));
+        bathroomLamp->drawDot(Vec2(576,1508),60,Color4F(1,1,1,.55f));
     }
     drawLightRect(bathroomLamp,Vec2(562,1512),Vec2(590,1520),Color4F(.28f,.28f,.28f,1));
     drawLightRect(bathroomLamp,Vec2(568,1506),Vec2(584,1512),
-        entered ? Color4F(1,.98f,.76f,1) : Color4F(.48f,.46f,.38f,1));
+        entered ? Color4F(1,1,1,1) : Color4F(.48f,.46f,.38f,1));
+}
+#endif
+
+#if defined(__EMSCRIPTEN__)
+void GameScene::hitTrashBin() {
+    if (trashCooldown > 0) return;
+    trashCooldown = .4f;
+    auto audio = CocosDenshion::SimpleAudioEngine::getInstance();
+    audio->playEffect("web-audio/trash-metal.wav",false,1,0,.85f);
+    audio->playEffect("web-audio/trash-slosh.wav",false,1,0,.65f);
+    trashBin->stopAllActions();
+    trashBin->setPosition(5680,1024);
+    trashBin->setRotation(0);
+    trashBin->runAction(Sequence::create(RotateTo::create(.045f,-3),RotateTo::create(.07f,3),
+        RotateTo::create(.06f,-2),RotateTo::create(.07f,0),nullptr));
+    trashBin->runAction(Sequence::create(MoveBy::create(.035f,Vec2(-4,0)),
+        MoveBy::create(.06f,Vec2(8,0)),MoveBy::create(.06f,Vec2(-6,0)),
+        MoveBy::create(.06f,Vec2(2,0)),nullptr));
+    const Color4B colors[] = {Color4B(72,130,60,255),Color4B(230,219,173,255),
+        Color4B(160,43,51,255),Color4B(103,153,77,255)};
+    const float drift[] = {-125,-95,105,140};
+    for (int i=0;i<4;++i) {
+        auto scrap = LayerColor::create(colors[i],8,5);
+        scrap->setPosition(5680+(i-2)*8,1240);
+        this->addChild(scrap,12);
+        scrap->runAction(JumpBy::create(.55f,Vec2(drift[i],-212),28+i*5,1));
+        scrap->runAction(Sequence::create(DelayTime::create(.35f),FadeOut::create(.2f),
+            RemoveSelf::create(),nullptr));
+    }
 }
 #endif

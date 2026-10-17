@@ -65,6 +65,11 @@ public:
     bool bathroomOccupied = false;
     LayerColor* bathroomShade = nullptr;
     DrawNode* bathroomLamp = nullptr;
+    LayerColor* bathroomWindowLight = nullptr;
+    Sprite* trashBin = nullptr;
+    bool touchingTrashBin = false, landedOnTrashBin = false;
+    float trashCooldown = 0;
+    void hitTrashBin();
     void updateBathroomLight();
 #endif
 
