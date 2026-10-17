@@ -255,3 +255,6 @@ Bin support now uses the legacy inner foot probe (3/7 or 4/7 of sprite width,
 according to facing), rather than the full collider overlapping the bin. When
 that probe leaves the authored 5600..5760 top, old wall resolution is prevented
 from snapping the player back onto the edge. The impact latch is unchanged.
+
+Third spotlight cue advanced by 50 ms: its delay after neon onset is now 70 ms
+instead of 120 ms. Guitar timing remains 50 ms before neon onset.

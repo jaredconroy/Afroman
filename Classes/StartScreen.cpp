@@ -102,7 +102,7 @@ bool StartScreen::init()
             if (!neonStarted) {
                 neonStarted = true;
                 // Guitar is cued 50 ms before the neon to compensate its lead-in.
-                runAction(Sequence::create(DelayTime::create(.12f),CallFunc::create([this]() {
+                runAction(Sequence::create(DelayTime::create(.07f),CallFunc::create([this]() {
                     if (titleAudioEnabled)
                         titleEffects.push_back(CocosDenshion::SimpleAudioEngine::getInstance()->playEffect(
                             "web-audio/spotlight.wav",false,1.0f,0,0.8f));
