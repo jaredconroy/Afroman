@@ -1,5 +1,9 @@
 #pragma once
 namespace afroman {
+inline bool binTopSupports(float footX, float feet, float verticalStep) {
+    return footX >= 5600 && footX < 5760 && verticalStep <= 0 &&
+        feet >= 1216 && feet+verticalStep <= 1216;
+}
 // Keep support latched through tile seams; only separation rearms an impact.
 class SurfaceImpact {
     bool occupied = false;

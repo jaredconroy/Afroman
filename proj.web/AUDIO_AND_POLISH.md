@@ -258,3 +258,14 @@ from snapping the player back onto the edge. The impact latch is unchanged.
 
 Third spotlight cue advanced by 50 ms: its delay after neon onset is now 70 ms
 instead of 120 ms. Guitar timing remains 50 ms before neon onset.
+
+## Continuous bin collision fix
+
+Bin wall tiles no longer participate in ground resolution; the swept continuous
+top is the sole support solver. Bin tiles only block horizontal movement when
+approached from outside below the lid, avoiding inclusive tile-edge wall hits
+on the top and snagging on exit. Ground support is cleared before solving.
+The original inner foot support range and impact latch remain. Tests cover both
+edge boundaries, fast/slow downward crossings, upward motion and repeat impacts.
+The horn now uses 220/277 Hz fundamentals with harmonics and lasts 380 ms.
+Build and focused regression tests pass; visual gameplay confirmation remains.

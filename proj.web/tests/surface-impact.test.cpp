@@ -1,6 +1,13 @@
 #include "SurfaceImpact.h"
 #include <cassert>
 int main() {
+    assert(afroman::binTopSupports(5600,1216,-1));
+    assert(afroman::binTopSupports(5759,1216,-1));
+    assert(afroman::binTopSupports(5680,1230,-20));
+    assert(!afroman::binTopSupports(5599,1216,-1));
+    assert(!afroman::binTopSupports(5760,1216,-1));
+    assert(!afroman::binTopSupports(5680,1210,10));
+    assert(!afroman::binTopSupports(5680,1215,-1));
     afroman::SurfaceImpact bin;
     assert(bin.update(true,true,1216)); // First gentle landing.
     for (int i=0;i<100;++i) {
