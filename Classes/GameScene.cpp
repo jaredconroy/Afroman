@@ -109,14 +109,9 @@ bool GameScene::init()
     carLights = DrawNode::create();
     // Existing white lamp pixels: native x2484..2495, y216..227.
     // Beam starts at their right edge, centered at world y1156; no extra lamp art.
-    for (int i=0; i<128; ++i) {
-        float t0=i/128.f, t1=(i+1)/128.f;
-        float x0=4992+608*t0, x1=4992+608*t1;
-        float h0=12+88*t0, h1=12+88*t1;
-        Vec2 strip[] = {Vec2(x0,1156-h0),Vec2(x1,1156-h1),
-                        Vec2(x1,1156+h1),Vec2(x0,1156+h0)};
-        carLights->drawPolygon(strip,4,Color4F(1,1,.8f,.28f*(1-t1)),0,Color4F(0,0,0,0));
-    }
+    Vec2 beam[] = {Vec2(4992,1144),Vec2(5600,1056),
+                   Vec2(5600,1256),Vec2(4992,1168)};
+    carLights->drawPolygon(beam,4,Color4F(1,1,.8f,.22f),0,Color4F(0,0,0,0));
     carLights->setVisible(false);
     this->addChild(carLights,12);
     // Authored bathroom interior: native TMX x=208..368, y=0..288, at 2x scale.
@@ -645,7 +640,17 @@ void GameScene::getCollisionTiles(float delta){
     // A swept top-plane test handles gentle landings and tile-corner misses.
     const float leftAfter = player->position.x + player->velocity.x +
         (player->facingRight ? 0 : player->player_size.width*.25f);
-    const bool overBin = leftAfter < 5760 && leftAfter+player->player_size.width*.75f > 5600;
+    // Use the original inner foot probe, rather than any overlap of the wide
+    // sprite collider, to decide whether the bin actually supports the player.
+    const float supportX = player->position.x + player->velocity.x +
+        player->player_size.width*(player->facingRight ? 3.f/7 : 4.f/7);
+    const bool overBin = supportX >= 5600 && supportX < 5760;
+    if (!overBin && feetBefore >= 1214 && feetBefore <= 1218 &&
+        std::abs(player->position.y-1216) <= 2 && incomingY < 0) {
+        player->position.y = feetBefore;
+        player->velocity.y = incomingY;
+        player->grounded = false;
+    }
     const bool crossedTop = overBin && incomingY <= 0 && feetBefore >= 1216 &&
         feetBefore+incomingY <= 1216;
     if (crossedTop) {
@@ -662,7 +667,7 @@ void GameScene::getCollisionTiles(float delta){
     if (carContact && !touchingCar) {
         carLightsOn = !carLightsOn;
         carLights->setVisible(carLightsOn);
-        CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("web-audio/car-alarm.wav",false,1,0,.65f);
+        CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("web-audio/car-horn.wav",false,1,0,.65f);
     }
     if (landed && incomingY < -5 && !onBinTop)
         CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("web-audio/land.wav",false,1,0,.5625f);

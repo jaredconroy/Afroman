@@ -242,3 +242,16 @@ necessary for the final feel and appearance.
 
 Guitar timing adjustment: advance reduced from 200 ms to 50 ms before neon
 onset (3.95 seconds into the intro), following listening feedback.
+
+## Solid beam, original foot support, and horn
+
+The beam is one uniformly colored translucent polygon instead of adjacent
+strips, eliminating strip seams. It retains its existing lamp origin and reaches
+the bin. Car toggles now use an original synthesized steady two-tone horn beep
+(`web-audio/car-horn.wav`) instead of the alarm. Replace this WAV and rebuild
+to substitute another horn recording.
+
+Bin support now uses the legacy inner foot probe (3/7 or 4/7 of sprite width,
+according to facing), rather than the full collider overlapping the bin. When
+that probe leaves the authored 5600..5760 top, old wall resolution is prevented
+from snapping the player back onto the edge. The impact latch is unchanged.
