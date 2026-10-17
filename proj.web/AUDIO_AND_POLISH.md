@@ -219,3 +219,6 @@ Landing on the blue car toggles its front headlamp and pale beam. Its authored
 collision tiles span columns 137–155; continued standing/walking on it does not
 retoggle the lamp. Both features remain browser-only. Build verification passes;
 interactive gameplay validation remains to be confirmed.
+
+Title guitar now starts 200 ms before neon onset (3.8 seconds into the intro),
+with the visual animation and other title cues unchanged.

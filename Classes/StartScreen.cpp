@@ -63,7 +63,15 @@ bool StartScreen::init()
                     "web-audio/spotlight.wav",false,1.0f,
                     frame==2 ? -0.35f : 0.35f,0.8f));
         }));
-        intro.pushBack(DelayTime::create(1.0f));
+        if (frame == 3) {
+            intro.pushBack(DelayTime::create(.8f));
+            intro.pushBack(CallFunc::create([this]() {
+                if (titleAudioEnabled)
+                    titleEffects.push_back(CocosDenshion::SimpleAudioEngine::getInstance()->playEffect(
+                        "web-audio/guitar.wav",false,1,0,.7f));
+            }));
+            intro.pushBack(DelayTime::create(.2f));
+        } else intro.pushBack(DelayTime::create(1.0f));
     }
     sprite->runAction(Sequence::create(intro));
 #else
@@ -93,8 +101,7 @@ bool StartScreen::init()
             auto audio = CocosDenshion::SimpleAudioEngine::getInstance();
             if (!neonStarted) {
                 neonStarted = true;
-                titleEffects.push_back(audio->playEffect("web-audio/guitar.wav",false,1,0,0.7f));
-                // Guitar has ~94 ms of recorded lead-in; let its audible attack lead.
+                // Guitar is cued 200 ms before the neon to compensate its lead-in.
                 runAction(Sequence::create(DelayTime::create(.12f),CallFunc::create([this]() {
                     if (titleAudioEnabled)
                         titleEffects.push_back(CocosDenshion::SimpleAudioEngine::getInstance()->playEffect(
