@@ -11,11 +11,12 @@
 <input id="sync-offset" type="range" min="-1000" max="1000" step="10" value="0">
 <p>Positive values make notes arrive later; negative values make them arrive earlier. Use this for a consistent offset, not changing tempo. Your setting is saved in this browser.</p>
 </details>
-<details><summary>Diagnostics</summary><pre id="log"></pre></details>
+<details><summary>Diagnostics</summary><p>Build: <span id="build-id">__AFROMAN_BUILD_ID__</span></p><pre id="log"></pre></details>
 <script>
+const buildId = '__AFROMAN_BUILD_ID__';
 const statusText=document.getElementById('status'), playButton=document.getElementById('play');
 const appendLog=s=>document.getElementById('log').textContent+=s+'\n';
-var Module={noInitialRun:true,canvas:document.getElementById('canvas'),
+var Module={noInitialRun:true,locateFile:(path,prefix)=>prefix+path+'?v='+buildId,canvas:document.getElementById('canvas'),
  print:function(s){console.log(s);appendLog(s);},
  printErr:function(s){console.error(s);appendLog('ERROR: '+s);},
  onAbort:function(s){statusText.textContent='Game failed to start: '+s;},

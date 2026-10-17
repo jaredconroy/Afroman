@@ -173,14 +173,15 @@ Source sound files remain unchanged by these playback-gain adjustments.
 Normal landing gain is now 0.5625 (another 25% reduction from 0.75). The guitar
 starts at neon turn-on; the third spotlight cue follows 120 ms later to account
 for the guitar recording's measured ~94 ms lead-in. Spotlight pitch remains 1.0.
-The bathroom uses a broad near-white cone, larger white fixture glow, and a
-separate white illumination layer inside the window pane.
+The bathroom now uses only full-room brightness, its small fixture, and a white
+window-pane overlay; the diagonal cone/glow has been removed. The overlay matches
+the actual pane at world (406,1206), size 146×212, covering its top edge.
 
 The first exterior bin is authored at TMX columns 175–179, body rows 12–17,
 with its lid on foreground row 11. Its art is displayed as one shaking sprite;
 the original collision tiles stay fixed and keep their GIDs. A side bump or
 landing on the bin triggers `trash-metal.wav` and `trash-slosh.wav`, a short
-3-degree/4-pixel shake, and four small scraps that fall and fade in 550 ms.
+5-degree/6-pixel shake, and four small scraps that fall and fade in 550 ms.
 A 400 ms cooldown avoids rapid retriggering, and sustained side contact triggers
 only once. A bin-top landing substitutes these sounds for the ordinary land.wav.
 
@@ -191,3 +192,17 @@ Verification: browser build passes and both staged trash WAVs are valid,
 unclipped PCM. Bin visual/contact playtesting was interrupted by browser
 interaction and remains a gameplay check; collision coordinates were verified
 against the actual body/lid tile GIDs.
+
+## Contact and preview refresh follow-up
+
+Side contact is now checked against the bin bounds before legacy tile resolution,
+rather than depending on which neighboring collision tile is resolved first.
+Landing detection uses the player foot position and bin-top bounds.
+Build passes; Safari automation timed out before contact animation could be
+visually confirmed in this follow-up.
+
+`build.sh` fingerprints JS/WASM/data and stamps a shared build ID into the HTML
+and all runtime asset URLs. Diagnostics displays this ID. `serve.sh` uses the
+local no-store server to avoid stale development assets. After rebuilding, reopen
+`afroman.html?v=<build-web/build-id.txt value>`; a running page still needs a reload
+to replace its already-loaded runtime. Compare Diagnostics IDs between previews.

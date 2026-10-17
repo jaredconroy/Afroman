@@ -10,10 +10,6 @@ void drawLightRect(DrawNode* node, Vec2 a, Vec2 b, const Color4F& color) {
     Vec2 corners[] = {a,Vec2(b.x,a.y),b,Vec2(a.x,b.y)};
     node->drawPolygon(corners,4,color,0,Color4F(0,0,0,0));
 }
-bool isTrashTile(const Rect& tile) {
-    return tile.getMinX() >= 5600 && tile.getMaxX() <= 5760 &&
-        tile.getMinY() >= 1024 && tile.getMaxY() <= 1216;
-}
 float triggerCenter(Level* level, const char* name, const Rect& tile) {
     auto map = level->getMap();
     auto layer = map->getLayer(name);
@@ -113,8 +109,8 @@ bool GameScene::init()
     bathroomShade = LayerColor::create(Color4B(0,0,0,115),320,576);
     bathroomShade->setPosition(416,1024);
     this->addChild(bathroomShade,-50);
-    bathroomWindowLight = LayerColor::create(Color4B(255,255,255,0),148,232);
-    bathroomWindowLight->setPosition(406,1184);
+    bathroomWindowLight = LayerColor::create(Color4B(255,255,255,0),146,212);
+    bathroomWindowLight->setPosition(406,1206);
     this->addChild(bathroomWindowLight,-45);
     bathroomLamp = DrawNode::create();
     this->addChild(bathroomLamp,-40);
@@ -369,7 +365,10 @@ void GameScene::updatePlayer(float delta){
 	this->getCollisionTiles(delta); //gets the collidable tiles
 #if defined(__EMSCRIPTEN__)
     if (fallingSpeed < -5 && player->velocity.y == 0) {
-        if (landedOnTrashBin) hitTrashBin();
+        const float left = player->position.x + (player->facingRight ? 0 : player->player_size.width*.25f);
+        const bool onBin = left < 5760 && left+player->player_size.width*.75f > 5600 &&
+            std::abs(player->position.y-1216) <= 2;
+        if (onBin) hitTrashBin();
         else CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("web-audio/land.wav",false,1,0,0.5625f);
     }
 #endif
@@ -528,8 +527,10 @@ void GameScene::getCollisionTiles(float delta){
 
 #if defined(__EMSCRIPTEN__)
     bool flushContact = false;
-    bool trashContact = false;
-    landedOnTrashBin = false;
+    // Probe the predicted collider against the bin itself. Legacy wall resolution
+    // can select another neighboring tile first, so tile-identity hooks miss bumps.
+    const bool trashContact = player->velocity.x != 0 && player->position.y < 1214 &&
+        player_rect.intersectsRect(Rect(5594,1024,172,192));
 #endif
 	// Wall collision
 
@@ -539,7 +540,6 @@ void GameScene::getCollisionTiles(float delta){
 	for (Rect tile : tiles) {
 		if (player_rect.intersectsRect(tile)) {
 #if defined(__EMSCRIPTEN__)
-            trashContact = isTrashTile(tile) && player->velocity.x != 0;
             flushContact = !player->facingRight && player->velocity.x < 0 &&
                 tile.getMaxX() <= flushBoundaryX + 0.1f && cameraTarget->getPositionY() == 1280;
 #endif
@@ -589,9 +589,6 @@ void GameScene::getCollisionTiles(float delta){
 		player->grounded = false;
 		if (tile.intersectsRect(player_rect)) {
 
-#if defined(__EMSCRIPTEN__)
-            landedOnTrashBin = landedOnTrashBin || (isTrashTile(tile) && tile.getMaxY() == 1216);
-#endif
 			player->position.y = tile.getMaxY();
 			// if we hit the ground, mark us as grounded so we can jump
 			player->grounded = true;
@@ -607,9 +604,6 @@ void GameScene::getCollisionTiles(float delta){
 		player->grounded = false;
 		if (tile.intersectsRect(player_rect)) {
 
-#if defined(__EMSCRIPTEN__)
-            landedOnTrashBin = landedOnTrashBin || (isTrashTile(tile) && tile.getMaxY() == 1216);
-#endif
 			player->position.y = tile.getMaxY();
 			// if we hit the ground, mark us as grounded so we can jump
 			player->grounded = true;
@@ -983,11 +977,6 @@ void GameScene::updateBathroomLight() {
     bathroomWindowLight->stopAllActions();
     bathroomWindowLight->runAction(FadeTo::create(.12f,entered ? 175 : 0));
     bathroomLamp->clear();
-    if (entered) {
-        Vec2 cone[] = {Vec2(562,1512),Vec2(590,1512),Vec2(768,1024),Vec2(384,1024)};
-        bathroomLamp->drawPolygon(cone,4,Color4F(1,1,.98f,.46f),0,Color4F(0,0,0,0));
-        bathroomLamp->drawDot(Vec2(576,1508),60,Color4F(1,1,1,.55f));
-    }
     drawLightRect(bathroomLamp,Vec2(562,1512),Vec2(590,1520),Color4F(.28f,.28f,.28f,1));
     drawLightRect(bathroomLamp,Vec2(568,1506),Vec2(584,1512),
         entered ? Color4F(1,1,1,1) : Color4F(.48f,.46f,.38f,1));
@@ -1004,11 +993,11 @@ void GameScene::hitTrashBin() {
     trashBin->stopAllActions();
     trashBin->setPosition(5680,1024);
     trashBin->setRotation(0);
-    trashBin->runAction(Sequence::create(RotateTo::create(.045f,-3),RotateTo::create(.07f,3),
-        RotateTo::create(.06f,-2),RotateTo::create(.07f,0),nullptr));
-    trashBin->runAction(Sequence::create(MoveBy::create(.035f,Vec2(-4,0)),
-        MoveBy::create(.06f,Vec2(8,0)),MoveBy::create(.06f,Vec2(-6,0)),
-        MoveBy::create(.06f,Vec2(2,0)),nullptr));
+    trashBin->runAction(Sequence::create(RotateTo::create(.07f,-5),RotateTo::create(.1f,5),
+        RotateTo::create(.1f,-3),RotateTo::create(.12f,0),nullptr));
+    trashBin->runAction(Sequence::create(MoveBy::create(.06f,Vec2(-6,0)),
+        MoveBy::create(.1f,Vec2(12,0)),MoveBy::create(.1f,Vec2(-9,0)),
+        MoveBy::create(.12f,Vec2(3,0)),nullptr));
     const Color4B colors[] = {Color4B(72,130,60,255),Color4B(230,219,173,255),
         Color4B(160,43,51,255),Color4B(103,153,77,255)};
     const float drift[] = {-125,-95,105,140};

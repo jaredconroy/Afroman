@@ -1,4 +1,4 @@
 #!/bin/bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
-exec python3 -m http.server "${PORT:-8000}" --bind 127.0.0.1 --directory "build-web"
+exec python3 proj.web/serve.py --port "${PORT:-8000}" --directory build-web

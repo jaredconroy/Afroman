@@ -67,7 +67,7 @@ public:
     DrawNode* bathroomLamp = nullptr;
     LayerColor* bathroomWindowLight = nullptr;
     Sprite* trashBin = nullptr;
-    bool touchingTrashBin = false, landedOnTrashBin = false;
+    bool touchingTrashBin = false;
     float trashCooldown = 0;
     void hitTrashBin();
     void updateBathroomLight();
