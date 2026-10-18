@@ -287,3 +287,24 @@ descending phrase when a sewer descent starts; holding a key does not retrigger
 the phrase throughout the traversal. Original synthesized placeholders are
 `Resources/web-audio/ladder-up.wav` and `ladder-down.wav`; replace either file
 and rebuild to supply your own audio. `generate_ladder_audio.py` restores both.
+
+## Level 1 concert free play
+
+The first red curtain starts at native map x7472 (world14944); the final curtain
+section is centered at world15472. Overlapping its left boundary upstairs while
+time remains secures victory. Camera pans there over 750 ms, the old HUD clock
+slides left at the same rate, and the new white seconds-only clock appears in an
+80×80 black square at (15472,1524). Player bounds are curtain-left to map-right.
+The existing countdown continues, pauses with the game, and opens YOU WIN at
+zero; Enter skips directly to that menu. Without stage arrival, zero still loses.
+
+Stage drumming uses Level 2 keys: U cymbal, J hi-hat, F snare, R/T/Y toms, Space
+bass. Background music stops at entry to leave room for free play. The bottom
+label reads FREE PLAY - PRESS [ENTER] TO SKIP. The opening objective is
+Get to the concert before time runs out. Level 1 movement accepts WASD as well
+as arrows. Every newly triggered flush adds 30 seconds, retaining fractional
+countdown progress. Holding contact does not repeatedly grant time.
+
+Validation: browser build and concert.test.cpp pass (arrival threshold, wrong
+floor, secured win, late arrival/loss, and fractional flush bonus). Visual stage
+layout and complete gameplay traversal remain to be checked interactively.

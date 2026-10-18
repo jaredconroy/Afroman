@@ -6,6 +6,7 @@
 #include "Player.h"
 #include "GameCountdown.h"
 #include "SurfaceImpact.h"
+#include "ConcertStage.h"
 #include <algorithm>
 #include <string>
 #include <vector>
@@ -63,6 +64,14 @@ public:
     float ladderCenterX = 0, sewerCenterX = 0, flushBoundaryX = 0;
     bool touchingFlushWall = false;
 #if defined(__EMSCRIPTEN__)
+    afroman::ConcertStage concert;
+    float stagePan = 0, stageCameraStart = 0;
+    const float stageLeft = 14944, stageCenter = 15472;
+    LabelTTF* objectiveLabel = nullptr;
+    LabelTTF* stageClock = nullptr;
+    LabelTTF* freePlayLabel = nullptr;
+    LayerColor* stageClockBox = nullptr;
+    void enterStage();
     bool bathroomOccupied = false;
     LayerColor* bathroomShade = nullptr;
     DrawNode* bathroomLamp = nullptr;

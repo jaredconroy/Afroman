@@ -203,6 +203,21 @@ bool GameScene::init()
 	this->schedule(schedule_selector(GameScene::updateScene)); //sets updateScene to run every second
 
 #if defined(__EMSCRIPTEN__)
+    objectiveLabel = LabelTTF::create("Get to the concert before time runs out", "8-Bit Madness", 28);
+    objectiveLabel->setPosition(cameraTarget->getPosition()+Vec2(-40,280));
+    addChild(objectiveLabel,9999);
+    stageClockBox = LayerColor::create(Color4B(0,0,0,255),80,80);
+    stageClockBox->setPosition(stageCenter-40,1484);
+    stageClockBox->setVisible(false);
+    addChild(stageClockBox,9998);
+    stageClock = LabelTTF::create("", "8-Bit Madness", 48);
+    stageClock->setPosition(stageCenter,1524);
+    stageClock->setVisible(false);
+    addChild(stageClock,9999);
+    freePlayLabel = LabelTTF::create("FREE PLAY - PRESS [ENTER] TO SKIP", "8-Bit Madness", 30);
+    freePlayLabel->setPosition(stageCenter,1000);
+    freePlayLabel->setVisible(false);
+    addChild(freePlayLabel,9999);
     CocosDenshion::SimpleAudioEngine::getInstance()->setBackgroundMusicVolume(1.0f);
     CocosDenshion::SimpleAudioEngine::getInstance()->playBackgroundMusic("web-audio/level1.wav", true);
 #endif
@@ -275,7 +290,12 @@ void GameScene::updateScene(float delta){
 		}
 
 		//keep the time label in the same position on the screen if the camera target moves
-		timeLabel->setPosition(cameraTarget->getPosition() + ccp(422, 280));
+#if defined(__EMSCRIPTEN__)
+        if (!concert.entered) timeLabel->setPosition(cameraTarget->getPosition()+Vec2(422,280));
+        objectiveLabel->setPosition(cameraTarget->getPosition()+Vec2(-40,280));
+#else
+        timeLabel->setPosition(cameraTarget->getPosition()+ccp(422,280));
+#endif
 
 		//keep the pause button in the same position on the screen if the camera target moves
 		menu->setPosition(cameraTarget->getPositionX() - (.47 * wsize.width), cameraTarget->getPositionY() + (.45 * wsize.height));
@@ -283,8 +303,20 @@ void GameScene::updateScene(float delta){
 		this->updatePlayer(delta);
 #if defined(__EMSCRIPTEN__)
         updateBathroomLight();
+        if (concert.arrive(player_sprite->getBoundingBox().getMaxX(),cameraTarget->getPositionY(),time)) enterStage();
+        if (concert.entered) {
+            stagePan = std::min(1.f,stagePan+delta/.75f);
+            cameraTarget->setPositionX(stageCameraStart+(stageCenter-stageCameraStart)*stagePan);
+            timeLabel->setPosition(cameraTarget->getPosition()+Vec2(422-1050*stagePan,280));
+            timeLabel->setVisible(stagePan < 1);
+            stageClock->setString(to_string(time));
+        }
 #endif
 	}
+#if defined(__EMSCRIPTEN__)
+    if (concert.won(time)) youWinMenu();
+    else if (concert.lost(time)) gameOverMenu();
+#else
 	//if time runs out, go to game over
 	if (time == 0){ 
 		gameOverMenu();
@@ -293,6 +325,7 @@ void GameScene::updateScene(float delta){
 	if (time > 0 && (player_sprite->getPositionX() >= ((2 * level->getMap()->getContentSize().width) - wsize.height)) && (cameraTarget->getPositionY() == 1280)){
 		youWinMenu();
 	}
+#endif
 }
 
 void GameScene::updatePlayer(float delta){
@@ -382,7 +415,11 @@ void GameScene::updatePlayer(float delta){
 	// change the player position based on its velocity
 
 	player->position.x = player->position.x + player->velocity.x;
-	if (player_sprite->getPosition().x + 300 <= ((level->getMap()->getContentSize().width * 2) - (wsize.width/2)))
+	if (
+#if defined(__EMSCRIPTEN__)
+        !concert.entered &&
+#endif
+        player_sprite->getPosition().x + 300 <= ((level->getMap()->getContentSize().width * 2) - (wsize.width/2)))
 	{
 		cameraTarget->setPositionX(player_sprite->getPosition().x + 300);
 	}
@@ -409,6 +446,12 @@ void GameScene::updatePlayer(float delta){
 		}
 	}
 
+#if defined(__EMSCRIPTEN__)
+    if (concert.entered) {
+        const float maxX = 2*level->getMap()->getContentSize().width-player->player_size.width;
+        player->position.x = std::max(stageLeft,std::min(maxX,player->position.x));
+    }
+#endif
 	this->updatePlayerSprite(delta);
 
 	if (std::find(heldKeys.begin(), heldKeys.end(), RIGHT_ARROW) == heldKeys.end() && player->grounded){
@@ -573,8 +616,10 @@ void GameScene::getCollisionTiles(float delta){
 	tiles.clear();
 
 #if defined(__EMSCRIPTEN__)
-    if (flushContact && !touchingFlushWall)
+    if (flushContact && !touchingFlushWall) {
+        time += 30;
         CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("web-audio/flush.wav");
+    }
     touchingFlushWall = flushContact;
 #endif
 	// Ground collision
@@ -974,6 +1019,21 @@ void GameScene::selectLevel(Ref *psender){
 
 void GameScene::onKeyPressed(EventKeyboard::KeyCode keyCode, Event* event)
 {
+#if defined(__EMSCRIPTEN__)
+    if (concert.entered && !paused && time > 0) {
+        if (keyCode == ENTER || keyCode == EventKeyboard::KeyCode::KEY_ENTER) { youWinMenu(); return; }
+        const EventKeyboard::KeyCode keys[] = {CYMBAL,HI_HAT,SNARE,TOM1,TOM2,TOM3,SPACEBAR};
+        const char* sounds[] = {"cymbal.wav","hihat.wav","snare.wav","tom1.wav","tom2.wav","tom3.wav","bass.wav"};
+        for (int i=0;i<7;++i) if (keyCode == keys[i]) {
+            CocosDenshion::SimpleAudioEngine::getInstance()->playEffect(sounds[i]);
+            return;
+        }
+    }
+    if (keyCode == EventKeyboard::KeyCode::KEY_W) keyCode = UP_ARROW;
+    if (keyCode == EventKeyboard::KeyCode::KEY_A) keyCode = LEFT_ARROW;
+    if (keyCode == EventKeyboard::KeyCode::KEY_S) keyCode = DOWN_ARROW;
+    if (keyCode == EventKeyboard::KeyCode::KEY_D) keyCode = RIGHT_ARROW;
+#endif
 	if (std::find(heldKeys.begin(), heldKeys.end(), keyCode) == heldKeys.end()){
 		heldKeys.push_back(keyCode);
 	}
@@ -981,6 +1041,12 @@ void GameScene::onKeyPressed(EventKeyboard::KeyCode keyCode, Event* event)
 
 void GameScene::onKeyReleased(EventKeyboard::KeyCode keyCode, Event* event)
 {
+#if defined(__EMSCRIPTEN__)
+    if (keyCode == EventKeyboard::KeyCode::KEY_W) keyCode = UP_ARROW;
+    if (keyCode == EventKeyboard::KeyCode::KEY_A) keyCode = LEFT_ARROW;
+    if (keyCode == EventKeyboard::KeyCode::KEY_S) keyCode = DOWN_ARROW;
+    if (keyCode == EventKeyboard::KeyCode::KEY_D) keyCode = RIGHT_ARROW;
+#endif
 	heldKeys.erase(std::remove(heldKeys.begin(), heldKeys.end(), keyCode), heldKeys.end());
 }
 
@@ -1058,5 +1124,17 @@ void GameScene::hitTrashBin() {
         scrap->runAction(Sequence::create(DelayTime::create(.35f),FadeOut::create(.2f),
             RemoveSelf::create(),nullptr));
     }
+}
+#endif
+
+#if defined(__EMSCRIPTEN__)
+void GameScene::enterStage() {
+    concert.entered = true;
+    stageCameraStart = cameraTarget->getPositionX();
+    objectiveLabel->setVisible(false);
+    stageClockBox->setVisible(true);
+    stageClock->setVisible(true);
+    freePlayLabel->setVisible(true);
+    CocosDenshion::SimpleAudioEngine::getInstance()->stopBackgroundMusic();
 }
 #endif

@@ -46,6 +46,13 @@ vector<Rect> Level::getTiles(Point point, int fromX, int fromY, string filename)
 
 		for (int b = fromY; b < 2; b++) {
 
+#if defined(__EMSCRIPTEN__)
+            // The concert permits reaching the map edge; neighboring probes
+            // beyond the TMX bounds are empty, not valid getTileAt coordinates.
+            const int tileX = (int)point.x+a, tileY = mapheight-((int)point.y+b);
+            if (tileX < 0 || tileY < 0 || tileX >= map->getMapSize().width ||
+                tileY >= map->getMapSize().height) continue;
+#endif
 			Sprite *tile = walls->getTileAt(Point((int)point.x + a, mapheight - ((int)point.y + b)));
 
 			if (tile != NULL) {
