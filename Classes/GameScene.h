@@ -66,6 +66,8 @@ public:
 #if defined(__EMSCRIPTEN__)
     afroman::ConcertStage concert;
     float stagePan = 0, stageCameraStart = 0;
+    float objectiveElapsed = 0, stageRevealDelay = 0;
+    bool stageRevealed = false;
     const float stageLeft = 14944, stageCenter = 15472;
     LabelTTF* objectiveLabel = nullptr;
     LabelTTF* stageClock = nullptr;

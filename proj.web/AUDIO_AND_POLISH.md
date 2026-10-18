@@ -318,3 +318,15 @@ stage clock center is y1536, halfway between the red panel bottom1472 and screen
 top1600; its black square follows. Free-play text is 40px at y992, the center
 of the brown strip960..1024. Only the drumset sprite moves left: the white kick
 circle at source x140 now aligns with final camera center15472.
+
+## Stage entrance and objective follow-up
+
+Objective font is now 32px, shifted right clear of Pause, with a 700px container.
+After five unpaused gameplay seconds it fades over 400ms. Stage entry hides the
+old HUD timer immediately. Camera pan begins from the currently displayed Follow
+transform rather than the next target position, preventing a curtain jump.
+The player disappears at entry, waits for camera arrival plus one second, then
+rises/fades into view over 500ms at stage center. Movement waits until this
+entrance completes. The stage countdown keeps running throughout. YOU WIN hides
+the free-play skip label, including when Enter skips early. Browser build and
+concert logic tests pass; visual timing/layout still needs a gameplay check.

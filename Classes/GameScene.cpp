@@ -207,10 +207,10 @@ bool GameScene::init()
 	this->schedule(schedule_selector(GameScene::updateScene)); //sets updateScene to run every second
 
 #if defined(__EMSCRIPTEN__)
-    objectiveLabel = LabelTTF::create("Get to the concert before time runs out", "8-Bit Madness", 40,
-        Size(800,48),kCCTextAlignmentLeft);
+    objectiveLabel = LabelTTF::create("Get to the concert before time runs out", "8-Bit Madness", 32,
+        Size(700,48),kCCTextAlignmentLeft);
     objectiveLabel->setAnchorPoint(Vec2(0,.5f));
-    objectiveLabel->setPosition(cameraTarget->getPosition()+Vec2(-505,280));
+    objectiveLabel->setPosition(cameraTarget->getPosition()+Vec2(-365,280));
     addChild(objectiveLabel,9999);
     stageClockBox = LayerColor::create(Color4B(0,0,0,255),80,80);
     stageClockBox->setPosition(stageCenter-40,1496);
@@ -273,6 +273,9 @@ void GameScene::updateScene(float delta){
 		
 #if defined(__EMSCRIPTEN__)
         countdown.advance(time, delta);
+        objectiveElapsed += delta;
+        if (!concert.entered && objectiveElapsed > 5)
+            objectiveLabel->setOpacity(255*std::max(0.f,1.f-(objectiveElapsed-5)/.4f));
         timeLabel->setColor(time <= 10 ? Color3B(255,35,55) : Color3B::WHITE);
         timeLabel->setScale(countdown.scale(time));
 #else
@@ -298,7 +301,7 @@ void GameScene::updateScene(float delta){
 		//keep the time label in the same position on the screen if the camera target moves
 #if defined(__EMSCRIPTEN__)
         if (!concert.entered) timeLabel->setPosition(cameraTarget->getPosition()+Vec2(422,280));
-        objectiveLabel->setPosition(cameraTarget->getPosition()+Vec2(-505,280));
+        objectiveLabel->setPosition(cameraTarget->getPosition()+Vec2(-365,280));
 #else
         timeLabel->setPosition(cameraTarget->getPosition()+ccp(422,280));
 #endif
@@ -306,7 +309,11 @@ void GameScene::updateScene(float delta){
 		//keep the pause button in the same position on the screen if the camera target moves
 		menu->setPosition(cameraTarget->getPositionX() - (.47 * wsize.width), cameraTarget->getPositionY() + (.45 * wsize.height));
 
-		this->updatePlayer(delta);
+#if defined(__EMSCRIPTEN__)
+        if (!concert.entered || (stageRevealed && player_sprite->getNumberOfRunningActions() == 0)) this->updatePlayer(delta);
+#else
+        this->updatePlayer(delta);
+#endif
 #if defined(__EMSCRIPTEN__)
         updateBathroomLight();
         if (concert.arrive(player_sprite->getBoundingBox().getMaxX(),cameraTarget->getPositionY(),time)) enterStage();
@@ -315,8 +322,24 @@ void GameScene::updateScene(float delta){
             const float distance = std::abs(stageCenter-stageCameraStart);
             stagePan = distance > 0 ? std::min(1.f,stagePan+delta*480.f/distance) : 1.f;
             cameraTarget->setPositionX(stageCameraStart+(stageCenter-stageCameraStart)*stagePan);
-            timeLabel->setPosition(cameraTarget->getPosition()+Vec2(422-1050*stagePan,280));
-            timeLabel->setVisible(stagePan < 1);
+            timeLabel->setVisible(false);
+            if (stagePan >= 1 && !stageRevealed) {
+                stageRevealDelay += delta;
+                if (stageRevealDelay >= 1.f) {
+                    stageRevealed = true;
+                    player->position = Vec2(stageCenter-player->player_size.width*.5f,1024);
+                    player->velocity = Vec2::ZERO;
+                    player->grounded = true;
+                    player->state = Player::State::Standing;
+                    player_sprite->setPosition(player->position);
+                    player_sprite->setVisible(true);
+                    player_sprite->setOpacity(0);
+                    player_sprite->runAction(FadeIn::create(.5f));
+                    // Offset the visual entrance; physics remains on the stage floor.
+                    player_sprite->setPositionY(1024-player->player_size.height);
+                    player_sprite->runAction(MoveTo::create(.5f,player->position));
+                }
+            }
             stageClock->setString(to_string(time));
         }
 #endif
@@ -961,6 +984,9 @@ void GameScene::gameOverMenu(){
 }
 
 void GameScene::youWinMenu(){
+#if defined(__EMSCRIPTEN__)
+    freePlayLabel->setVisible(false);
+#endif
 
 	//don't pause if the game is already paused
 	if (!paused){
@@ -1138,7 +1164,13 @@ void GameScene::hitTrashBin() {
 #if defined(__EMSCRIPTEN__)
 void GameScene::enterStage() {
     concert.entered = true;
-    stageCameraStart = cameraTarget->getPositionX();
+    // Follow updates the layer after gameplay; start from the view currently drawn.
+    stageCameraStart = wsize.width*.5f-getPositionX();
+    cameraTarget->setPositionX(stageCameraStart);
+    player_sprite->setVisible(false);
+    player->velocity = Vec2::ZERO;
+    heldKeys.clear();
+    timeLabel->setVisible(false);
     objectiveLabel->setVisible(false);
     stageClockBox->setVisible(true);
     stageClock->setVisible(true);
