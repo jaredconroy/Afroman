@@ -308,3 +308,13 @@ countdown progress. Holding contact does not repeatedly grant time.
 Validation: browser build and concert.test.cpp pass (arrival threshold, wrong
 floor, secured win, late arrival/loss, and fractional flush bonus). Visual stage
 layout and complete gameplay traversal remain to be checked interactively.
+
+## Concert layout refinement
+
+Opening objective uses the timer's 40px font and camera-relative y280, with an
+800×48 left-aligned container beginning 20px from the screen edge. Concert pan
+travels at 480 world pixels/second, matching normal running (8px at 60Hz). The
+stage clock center is y1536, halfway between the red panel bottom1472 and screen
+top1600; its black square follows. Free-play text is 40px at y992, the center
+of the brown strip960..1024. Only the drumset sprite moves left: the white kick
+circle at source x140 now aligns with final camera center15472.

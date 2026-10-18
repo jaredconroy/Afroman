@@ -154,6 +154,10 @@ bool GameScene::init()
 	drumset = Sprite::create("drumset.png");
 	drumset->setScale(1.5f);
 	drumset->setPosition((2 * level->getMap()->getContentSize().width) - 510, 1110);
+#if defined(__EMSCRIPTEN__)
+    // Kick-circle center is x140 in the 277px-wide art, at 1.5x scale.
+    drumset->setPositionX(stageCenter-(140.f-277.f/2)*1.5f);
+#endif
 	this->addChild(drumset, 500);
 
 	//create a sprite called disguise. this can be picked up by the player
@@ -203,19 +207,21 @@ bool GameScene::init()
 	this->schedule(schedule_selector(GameScene::updateScene)); //sets updateScene to run every second
 
 #if defined(__EMSCRIPTEN__)
-    objectiveLabel = LabelTTF::create("Get to the concert before time runs out", "8-Bit Madness", 28);
-    objectiveLabel->setPosition(cameraTarget->getPosition()+Vec2(-40,280));
+    objectiveLabel = LabelTTF::create("Get to the concert before time runs out", "8-Bit Madness", 40,
+        Size(800,48),kCCTextAlignmentLeft);
+    objectiveLabel->setAnchorPoint(Vec2(0,.5f));
+    objectiveLabel->setPosition(cameraTarget->getPosition()+Vec2(-505,280));
     addChild(objectiveLabel,9999);
     stageClockBox = LayerColor::create(Color4B(0,0,0,255),80,80);
-    stageClockBox->setPosition(stageCenter-40,1484);
+    stageClockBox->setPosition(stageCenter-40,1496);
     stageClockBox->setVisible(false);
     addChild(stageClockBox,9998);
     stageClock = LabelTTF::create("", "8-Bit Madness", 48);
-    stageClock->setPosition(stageCenter,1524);
+    stageClock->setPosition(stageCenter,1536);
     stageClock->setVisible(false);
     addChild(stageClock,9999);
-    freePlayLabel = LabelTTF::create("FREE PLAY - PRESS [ENTER] TO SKIP", "8-Bit Madness", 30);
-    freePlayLabel->setPosition(stageCenter,1000);
+    freePlayLabel = LabelTTF::create("FREE PLAY - PRESS [ENTER] TO SKIP", "8-Bit Madness", 40);
+    freePlayLabel->setPosition(stageCenter,992);
     freePlayLabel->setVisible(false);
     addChild(freePlayLabel,9999);
     CocosDenshion::SimpleAudioEngine::getInstance()->setBackgroundMusicVolume(1.0f);
@@ -292,7 +298,7 @@ void GameScene::updateScene(float delta){
 		//keep the time label in the same position on the screen if the camera target moves
 #if defined(__EMSCRIPTEN__)
         if (!concert.entered) timeLabel->setPosition(cameraTarget->getPosition()+Vec2(422,280));
-        objectiveLabel->setPosition(cameraTarget->getPosition()+Vec2(-40,280));
+        objectiveLabel->setPosition(cameraTarget->getPosition()+Vec2(-505,280));
 #else
         timeLabel->setPosition(cameraTarget->getPosition()+ccp(422,280));
 #endif
@@ -305,7 +311,9 @@ void GameScene::updateScene(float delta){
         updateBathroomLight();
         if (concert.arrive(player_sprite->getBoundingBox().getMaxX(),cameraTarget->getPositionY(),time)) enterStage();
         if (concert.entered) {
-            stagePan = std::min(1.f,stagePan+delta/.75f);
+            // Normal running is 8 world pixels per 60 Hz simulation frame.
+            const float distance = std::abs(stageCenter-stageCameraStart);
+            stagePan = distance > 0 ? std::min(1.f,stagePan+delta*480.f/distance) : 1.f;
             cameraTarget->setPositionX(stageCameraStart+(stageCenter-stageCameraStart)*stagePan);
             timeLabel->setPosition(cameraTarget->getPosition()+Vec2(422-1050*stagePan,280));
             timeLabel->setVisible(stagePan < 1);
