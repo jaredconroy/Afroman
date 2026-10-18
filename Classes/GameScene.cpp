@@ -207,8 +207,8 @@ bool GameScene::init()
 	this->schedule(schedule_selector(GameScene::updateScene)); //sets updateScene to run every second
 
 #if defined(__EMSCRIPTEN__)
-    objectiveLabel = LabelTTF::create("Get to the concert before time runs out", "8-Bit Madness", 32,
-        Size(700,48),kCCTextAlignmentLeft);
+    objectiveLabel = LabelTTF::create("Get to the concert before time runs out", "8-Bit Madness", 40,
+        Size(700,32),kCCTextAlignmentLeft);
     objectiveLabel->setAnchorPoint(Vec2(0,.5f));
     objectiveLabel->setPosition(cameraTarget->getPosition()+Vec2(-365,280));
     addChild(objectiveLabel,9999);
@@ -327,10 +327,14 @@ void GameScene::updateScene(float delta){
                 stageRevealDelay += delta;
                 if (stageRevealDelay >= 1.f) {
                     stageRevealed = true;
-                    player->position = Vec2(stageCenter-player->player_size.width*.5f,1024);
+                    // Idle torso is centered at source x125, rather than image center111.
+                    player->position = Vec2(stageCenter-125,1024);
+                    player->facingRight = true;
+                    player_sprite->setFlippedX(false);
                     player->velocity = Vec2::ZERO;
                     player->grounded = true;
                     player->state = Player::State::Standing;
+                    updatePlayerSprite(0);
                     player_sprite->setPosition(player->position);
                     player_sprite->setVisible(true);
                     player_sprite->setOpacity(0);
@@ -479,8 +483,9 @@ void GameScene::updatePlayer(float delta){
 
 #if defined(__EMSCRIPTEN__)
     if (concert.entered) {
-        const float maxX = 2*level->getMap()->getContentSize().width-player->player_size.width;
-        player->position.x = std::max(stageLeft,std::min(maxX,player->position.x));
+        const Rect kit = drumset->getBoundingBox();
+        const float maxX = kit.getMaxX()-player->player_size.width;
+        player->position.x = std::max(kit.getMinX(),std::min(maxX,player->position.x));
     }
 #endif
 	this->updatePlayerSprite(delta);
@@ -993,7 +998,8 @@ void GameScene::youWinMenu(){
 		paused = true; //pause the game
 #if defined(__EMSCRIPTEN__)
         CocosDenshion::SimpleAudioEngine::getInstance()->pauseBackgroundMusic();
-        CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("web-audio/win.wav");
+        if (!concert.entered)
+            CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("web-audio/win.wav");
 #endif
 
 
@@ -1167,7 +1173,7 @@ void GameScene::enterStage() {
     // Follow updates the layer after gameplay; start from the view currently drawn.
     stageCameraStart = wsize.width*.5f-getPositionX();
     cameraTarget->setPositionX(stageCameraStart);
-    player_sprite->setVisible(false);
+    // Freeze in the current world position; the camera carries him out of view.
     player->velocity = Vec2::ZERO;
     heldKeys.clear();
     timeLabel->setVisible(false);
@@ -1175,6 +1181,8 @@ void GameScene::enterStage() {
     stageClockBox->setVisible(true);
     stageClock->setVisible(true);
     freePlayLabel->setVisible(true);
-    CocosDenshion::SimpleAudioEngine::getInstance()->stopBackgroundMusic();
+    auto audio = CocosDenshion::SimpleAudioEngine::getInstance();
+    audio->stopBackgroundMusic();
+    audio->playEffect("web-audio/win.wav");
 }
 #endif

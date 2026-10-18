@@ -330,3 +330,13 @@ rises/fades into view over 500ms at stage center. Movement waits until this
 entrance completes. The stage countdown keeps running throughout. YOU WIN hides
 the free-play skip label, including when Enter skips early. Browser build and
 concert logic tests pass; visual timing/layout still needs a gameplay check.
+
+## Stage entry polish
+
+YOU WIN sound now plays immediately at stage entry and does not repeat when
+the final win menu opens. Player remains frozen/visible at the entry world
+position during the pan; the later rise uses idle torso source-x125 as its
+center reference. Movement bounds now keep the sprite inside the drumset's
+actual bounding box. Objective matches the timer's exact 40px font, 32px text
+container height, and camera-relative y280; the earlier 48px container caused
+a baseline mismatch. Existing objective fade and horizontal placement remain.
